@@ -369,18 +369,41 @@ class SentinelInferenceEngine:
             return False
     
     def check_crash_trigger(self, risk_score, features):
-        """Check if crash threshold exceeded and trigger ZK proof"""
+        """Check if crash threshold exceeded and trigger Risc Zero ZK proof"""
         if risk_score > CRASH_THRESHOLD:
             logger.critical(f"⚠️  CRASH THRESHOLD EXCEEDED: {risk_score:.4f} > {CRASH_THRESHOLD}")
             print("\n" + "="*60)
-            print("🚨 MARKET CRASH DETECTED - INITIATING ZK PROOF")
+            print("🚨 MARKET CRASH DETECTED - INITIATING RISC ZERO PROOF")
             print("="*60 + "\n")
             
-            # Save crash input data
-            crash_input_path = self.save_crash_input(features)
-            if crash_input_path:
-                # Trigger ZK proof generation  
-                self.trigger_zk_proof_generation(crash_input_path)
+            # Import Risc Zero adapter
+            try:
+                sys.path.append(str(Path(__file__).parent.parent / "zk-circuit"))
+                from prove_adapter import generate_risc_zero_proof
+                
+                # Get current market sequence for proof
+                if len(self.feature_buffer) >= SEQUENCE_LENGTH:
+                    current_sequence = np.array(self.feature_buffer[-SEQUENCE_LENGTH:])
+                    
+                    # Generate zero-knowledge proof
+                    logger.info("Generating Risc Zero proof...")
+                    if generate_risc_zero_proof(self.model, current_sequence):
+                        logger.info("✅ RISC ZERO PROOF GENERATED")
+                        print("\n" + "="*60)
+                        print("✅ ZERO-KNOWLEDGE PROOF GENERATED SUCCESSFULLY")
+                        print("   Proof location: packages/verification-proofs/proofs/risk_receipt.dat")
+                        print("="*60 + "\n")
+                    else:
+                        logger.error("❌ Risc Zero proof generation failed")
+                        logger.info("Check installation: cargo build --release in risc0-verifier/")
+                else:
+                    logger.warning("Insufficient data buffer for proof generation")
+                    
+            except ImportError as e:
+                logger.warning(f"Risc Zero adapter not available: {e}")
+                logger.info("To enable ZK proofs: Install Rust and build risc0-verifier")
+            except Exception as e:
+                logger.error(f"Error during proof generation: {e}")
             
             return True
         elif risk_score > WARNING_THRESHOLD:

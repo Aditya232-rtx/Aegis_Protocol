@@ -1,0 +1,12 @@
+[package]
+name = "lstm-verify-guest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+risc0-zkvm = { workspace = true, default-features = false, features = ["std"] }
+serde = { workspace = true, default-features = false, features = ["derive"] }
+
+[patch.crates-io]
+# Patch for optimization
+getrandom = { version = "0.2", features = ["custom"] }
