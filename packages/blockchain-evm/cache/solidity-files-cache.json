@@ -81,43 +81,6 @@
         "IVerifier"
       ]
     },
-    "/Users/adityajadhav/Aegis/Aegis_Protocol/packages/blockchain-evm/contracts/interfaces/IUnstoppable.sol": {
-      "lastModificationDate": 1765643315153,
-      "contentHash": "e331a85a2722f3e9716f4e99675a3a09",
-      "sourceName": "contracts/interfaces/IUnstoppable.sol",
-      "solcConfig": {
-        "version": "0.8.20",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "IUnstoppable"
-      ]
-    },
     "/Users/adityajadhav/Aegis/Aegis_Protocol/packages/blockchain-evm/contracts/core/BackstopPool.sol": {
       "lastModificationDate": 1765643322463,
       "contentHash": "e04afa59b9d7be7bb9d0fcf2ef53e112",
@@ -159,6 +122,43 @@
       ],
       "artifacts": [
         "BackstopPool"
+      ]
+    },
+    "/Users/adityajadhav/Aegis/Aegis_Protocol/packages/blockchain-evm/contracts/interfaces/IUnstoppable.sol": {
+      "lastModificationDate": 1765643315153,
+      "contentHash": "e331a85a2722f3e9716f4e99675a3a09",
+      "sourceName": "contracts/interfaces/IUnstoppable.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "IUnstoppable"
       ]
     },
     "/Users/adityajadhav/Aegis/Aegis_Protocol/packages/blockchain-evm/node_modules/@openzeppelin/contracts/access/AccessControl.sol": {
@@ -1053,43 +1053,6 @@
       ],
       "artifacts": [
         "MockVerifier"
-      ]
-    },
-    "/Users/adityajadhav/Aegis/Aegis_Protocol/packages/blockchain-evm/contracts/security/AccessControl.sol": {
-      "lastModificationDate": 1765622907941,
-      "contentHash": "10a41aa2fd7426c3d4a7600245d7a71f",
-      "sourceName": "contracts/security/AccessControl.sol",
-      "solcConfig": {
-        "version": "0.8.20",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.20"
-      ],
-      "artifacts": [
-        "AccessControl"
       ]
     }
   }

@@ -1,15 +1,18 @@
 {
-  // 1. Context Extraction
-  // We look at the first input which contains the Bridge Signal
-  val signalBox = INPUTS(0)
-  // We look at the second input which is the Oracle Pool Box
-  val oracleBox = INPUTS(1)
+  // 1. Context Extraction (data inputs only; nothing key-based or spent)
+  // Watchers publish the bridge signal and oracle state as DATA INPUTS.
+  val signalBox = CONTEXT.dataInputs(0)
+  val oracleBox = CONTEXT.dataInputs(1)
 
   // 2. Data Decoding
   val reportedRisk = signalBox.R4[Int].get
   val ethPrice = oracleBox.R4[Long].get
 
   // 3. Logic Gates
+  // Gate 0: Ensure the signal came from the approved Rosen Watcher script
+  val expectedWatcherScript = SELF.R7[Coll[Byte]].get // stored in the box by governance
+  val watcherAttested = signalBox.propositionBytes == expectedWatcherScript
+
   // Gate A: Bridge Signal Validation
   // Does the bridge report High Risk? (>= 80)
   val bridgeSignalValid = reportedRisk >= 80
@@ -29,5 +32,11 @@
   val correctDestination = OUTPUTS(0).propositionBytes == vaultAddress
 
   // 4. Final Sigma Proposition
-  sigmaProp(bridgeSignalValid && marketCrashConfirmed && isProofValid && correctDestination)
+  sigmaProp(
+    watcherAttested &&
+    bridgeSignalValid &&
+    marketCrashConfirmed &&
+    isProofValid &&
+    correctDestination
+  )
 }
