@@ -1,0 +1,61 @@
+# AI-Sentinel .gitignore
+
+# Old root-level directories (moved to packages/)
+# These should not be tracked - close editor tabs and delete manually
+ml-sentinel/
+frontend-cockpit/
+blockchain-evm/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Logs
+*.log
+logs/
+
+# Trained models - KEEP IN REPO (important!)
+# The following ensures trained models are tracked
+!packages/ml-sentinel/model/trained/*.h5
+!packages/ml-sentinel/model/trained/*.onnx
+
+# ZK artifacts (generated - can be regenerated)
+# Ignore these except in trained/ directory
+*.ezkl
+*.srs
+pk.key
+vk.key
+settings.json
+kzg.srs
+
+# Ignore model files elsewhere (but not in trained/)
+*.h5
+*.onnx
+!**/trained/*.h5
+!**/trained/*.onnx
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+cleanup_*.bat
