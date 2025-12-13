@@ -24,8 +24,9 @@ COMPILED_CIRCUIT = ZK_DIR / "model.ezkl"
 PK_FILE = ZK_DIR / "pk.key"
 VK_FILE = ZK_DIR / "vk.key"
 SRS_FILE = ZK_DIR / "kzg.srs"
-# Fixed path for packages structure
-ROOT_DIR = SCRIPT_DIR.parent.parent.parent
+# Fixed path for packages structure  
+# SCRIPT_DIR = zk-circuit, .parent = ml-sentinel, .parent.parent = packages
+ROOT_DIR = SCRIPT_DIR.parent.parent
 VERIFIER_CONTRACT = ROOT_DIR / "verification-proofs" / "contracts" / "Verifier.sol"
 
 def setup_zk_circuit():
