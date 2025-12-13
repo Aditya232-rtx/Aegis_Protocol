@@ -1,142 +1,93 @@
 """
-Python Adapter for Risc Zero Proof Generation
-Bridges Python inference engine with Rust zkVM host
+Mock Risc Zero Proof Generator for Hackathon Demo
+Simulates proof generation without actual zkVM compilation
+
+USE THIS FOR DEMO - Replace with real Risc Zero after hackathon on Linux
 """
 
 import json
-import subprocess
-import numpy as np
+import time
+import hashlib
 from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
 
-class RiscZeroProofGenerator:
-    """Generate zero-knowledge proofs using Risc Zero zkVM"""
+class MockRiscZeroProofGenerator:
+    """Mock proof generator for demonstration purposes"""
     
     def __init__(self):
         self.zk_input_path = Path("packages/ml-sentinel/zk-circuit/zk_input.json")
-        self.host_binary = Path("packages/ml-sentinel/zk-circuit/risc0-verifier/target/release/host")
-    
-    def export_model_weights(self, model):
-        """Export Keras model weights to Risc Zero format"""
-        try:
-            weights_dict = {
-                "lstm1_kernel": model.layers[0].get_weights()[0].tolist(),
-                "lstm1_recurrent": model.layers[0].get_weights()[1].tolist(),
-                "lstm1_bias": model.layers[0].get_weights()[2].tolist(),
-                
-                "lstm2_kernel": model.layers[1].get_weights()[0].tolist(),
-                "lstm2_recurrent": model.layers[1].get_weights()[1].tolist(),
-                "lstm2_bias": model.layers[1].get_weights()[2].tolist(),
-                
-                "dense_kernel": model.layers[2].get_weights()[0].tolist(),
-                "dense_bias": model.layers[2].get_weights()[1].tolist(),
-            }
-            return weights_dict
-        except Exception as e:
-            logger.error(f"Failed to export model weights: {e}")
-            return None
-    
-    def prepare_market_data(self, sequence):
-        """Prepare market data sequence for zkVM"""
-        try:
-            # Ensure it's a numpy array
-            if isinstance(sequence, list):
-                sequence = np.array(sequence)
-            
-            # Convert to list of lists
-            market_data = {
-                "sequence": sequence.tolist()
-            }
-            return market_data
-        except Exception as e:
-            logger.error(f"Failed to prepare market data: {e}")
-            return None
+        self.proof_output = Path("packages/verification-proofs/proofs/risk_receipt.dat")
     
     def generate_proof(self, model, market_sequence):
         """
-        Generate zero-knowledge proof for crash prediction
+        MOCK proof generation for hackathon demo
         
-        Args:
-            model: Keras LSTM model
-            market_sequence: numpy array of shape (60, 4)
-        
-        Returns:
-            bool: True if proof generated successfully
+        In production (Linux), this would call real Risc Zero
         """
         try:
-            # 1. Export model weights
-            logger.info("Exporting model weights...")
-            weights = self.export_model_weights(model)
-            if weights is None:
-                return False
+            logger.info("🎭 DEMO MODE: Generating mock zero-knowledge proof...")
+            logger.info("   (Using simulated zkVM for hackathon demonstration)")
             
-            # 2. Prepare market data
-            logger.info("Preparing market data...")
-            market_data = self.prepare_market_data(market_sequence)
-            if market_data is None:
-                return False
+            # Simulate proof generation time
+            time.sleep(2)  # 2 seconds instead of 60
             
-            # 3. Write inputs to JSON file
-            logger.info(f"Writing inputs to {self.zk_input_path}...")
-            zk_input = {
-                "weights": weights,
-                "market_data": market_data
-            }
+            # Create mock proof data
+            proof_data = self._create_mock_proof(model, market_sequence)
             
-            self.zk_input_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.zk_input_path, 'w') as f:
-                json.dump(zk_input, f)
+            # Save to expected location
+            self.proof_output.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.proof_output, 'wb') as f:
+                f.write(proof_data)
             
-            # 4. Check if host binary exists
-            if not self.host_binary.exists():
-                logger.error(f"Host binary not found: {self.host_binary}")
-                logger.error("Please build the Risc Zero project first:")
-                logger.error("  cd packages/ml-sentinel/zk-circuit/risc0-verifier")
-                logger.error("  cargo build --release")
-                return False
+            logger.info("✅ MOCK PROOF GENERATED SUCCESSFULLY")
+            logger.info(f"   Proof saved to: {self.proof_output}")
+            logger.info("   📝 Note: Using demo mode - deploy on Linux for real ZK proofs")
             
-            # 5. Execute Risc Zero host
-            logger.info("🚀 Generating zero-knowledge proof...")
-            logger.info("   (This may take 30-60 seconds...)")
+            return True
             
-            result = subprocess.run(
-                [str(self.host_binary)],
-                cwd=self.host_binary.parent.parent,
-                capture_output=True,
-                text=True,
-                timeout=120  # 2 minute timeout
-            )
-            
-            if result.returncode == 0:
-                logger.info("✅ RISC ZERO PROOF GENERATED SUCCESSFULLY")
-                logger.info(result.stdout)
-                return True
-            else:
-                logger.error(f"Proof generation failed:")
-                logger.error(result.stderr)
-                return False
-        
-        except subprocess.TimeoutExpired:
-            logger.error("Proof generation timed out (> 2 minutes)")
-            return False
-        
         except Exception as e:
-            logger.error(f"Unexpected error during proof generation: {e}")
+            logger.error(f"Mock proof generation failed: {e}")
             return False
+    
+    def _create_mock_proof(self, model, market_sequence):
+        """Create a mock proof receipt"""
+        
+        # Get risk score from model
+        import numpy as np
+        sequence = np.array(market_sequence).reshape(1, 60, 4)
+        risk_score = float(model.predict(sequence, verbose=0)[0][0])
+        
+        # Create deterministic "proof" using hash
+        proof_input = f"{risk_score}_{market_sequence.tobytes().hex()}"
+        proof_hash = hashlib.sha256(proof_input.encode()).hexdigest()
+        
+        # Mock receipt structure
+        mock_receipt = {
+            "version": "mock-v1.0-hackathon",
+            "risk_score": risk_score,
+            "proof_hash": proof_hash,
+            "timestamp": time.time(),
+            "note": "DEMO MODE - Real ZK proof requires Linux deployment",
+            "journal": {
+                "public_output": risk_score,
+                "commit_hash": proof_hash[:16]
+            }
+        }
+        
+        # Return as JSON bytes (in real Risc Zero this would be bincode)
+        return json.dumps(mock_receipt, indent=2).encode()
 
-# Convenience function for integration with inference.py
+
+# Convenience function matching the real API
 def generate_risc_zero_proof(model, market_sequence):
     """
-    Wrapper function to generate Risc Zero proof
+    Mock wrapper for hackathon demo
     
-    Usage in inference.py:
-        from prove_adapter import generate_risc_zero_proof
-        
-        if risk_score > 0.8:
-            if generate_risc_zero_proof(self.model, current_sequence):
-                logger.info("✓ RISC ZERO PROOF GENERATED")
+    DEPLOYMENT NOTE:
+    - For demo: Uses this mock generator (works on Windows)
+    - For production: Build real Risc Zero on Linux and replace this file
     """
-    generator = RiscZeroProofGenerator()
+    generator = MockRiscZeroProofGenerator()
     return generator.generate_proof(model, market_sequence)
