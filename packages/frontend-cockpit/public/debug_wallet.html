@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Connection Debugger</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        #logs { background: #1a1a1a; color: #00ff00; padding: 15px; border-radius: 4px; margin-top: 20px; height: 300px; overflow-y: auto; font-family: monospace; }
+        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🛠️ Wallet Debugger</h1>
+        <p>Use this tool to verify your MetaMask connection state.</p>
+        
+        <div id="statusArea">
+            Status: <span id="status" class="status-badge disconnected">Checking...</span>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button onclick="checkStatus()">1. Check Status (eth_accounts)</button>
+            <button onclick="requestAccounts()">2. Request Accounts (eth_requestAccounts)</button>
+            <button onclick="revokePermissions()" style="background: #dc3545;">3. Revoke Permissions (Reset)</button>
+        </div>
+
+        <div id="logs"></div>
+    </div>
+
+    <script>
+        const logDiv = document.getElementById('logs');
+        const statusSpan = document.getElementById('status');
+
+        function log(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const el = document.createElement('div');
+            el.innerHTML = `<span style="color: #888">[${time}]</span> ${msg}`;
+            logDiv.appendChild(el);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        async function checkStatus() {
+            log("Checking connection status...");
+            if (typeof window.ethereum === 'undefined') {
+                log("❌ MetaMask is NOT installed!", 'error');
+                return;
+            }
+
+            try {
+                // eth_accounts returns the list of addresses owned by the client
+                // WITHOUT prompting the user. If this returns an array, we are ALREADY connected.
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                
+                if (accounts.length > 0) {
+                    log(`✅ ALREADY CONNECTED: ${accounts[0]}`);
+                    log(`👉 This is why you don't see the popup! The site is already authorized.`);
+                    statusSpan.className = 'status-badge connected';
+                    statusSpan.innerText = 'Connected';
+                } else {
+                    log("Mq Not connected. eth_accounts returned empty.");
+                    log("👉 If you click Request Accounts now, you SHOULD see a popup.");
+                    statusSpan.className = 'status-badge disconnected';
+                    statusSpan.innerText = 'Disconnected';
+                }
+            } catch (error) {
+                log(`❌ Error checking status: ${error.message}`);
+            }
+        }
+
+        async function requestAccounts() {
+            log("Requesting accounts (eth_requestAccounts)...");
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                log(`✅ Connected successfully: ${accounts[0]}`);
+                checkStatus();
+            } catch (error) {
+                log(`❌ Connection rejected/failed: ${error.message}`);
+            }
+        }
+
+        async function revokePermissions() {
+            log("Attempting to revoke permissions...");
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_revokePermissions',
+                    params: [{ eth_accounts: {} }]
+                });
+                log("✅ Permissions revoked! The site should now be disconnected.");
+                log("Try clicking 'Request Accounts' again - you should see the popup now.");
+                checkStatus();
+            } catch (error) {
+                log(`⚠️ Revoke failed (Not all wallets support this): ${error.message}`);
+                log("ℹ️ Manual Disconnect: Open MetaMask > Click 3 dots (top right) > Connected Sites > Remove this site.");
+            }
+        }
+
+        // Check on load
+        window.addEventListener('load', checkStatus);
+    </script>
+</body>
+</html>
