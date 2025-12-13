@@ -1,0 +1,54 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "MockCoWSwap",
+  "sourceName": "contracts/mocks/MockCoWSwap.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "tokenSell",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "OrderPlaced",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenSell",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "placeOrder",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608080604052346100155760bf908161001b8239f35b600080fdfe6080806040526004361015601257600080fd5b600090813560e01c63b25e2e6814602857600080fd5b3460855760403660031901126085576004356001600160a01b03811692908390036082575060207ff6f21bda482268b6851cb7d134c9ef42acd2e610afc2ce82688cd2799adacca3916024358152a2602060405160018152f35b80fd5b5080fdfea2646970667358221220a8f1940c8e6083a803f2edb4dfd371b2482ac85b8a8b671fc39ef64aed8309b664736f6c63430008140033",
+  "deployedBytecode": "0x6080806040526004361015601257600080fd5b600090813560e01c63b25e2e6814602857600080fd5b3460855760403660031901126085576004356001600160a01b03811692908390036082575060207ff6f21bda482268b6851cb7d134c9ef42acd2e610afc2ce82688cd2799adacca3916024358152a2602060405160018152f35b80fd5b5080fdfea2646970667358221220a8f1940c8e6083a803f2edb4dfd371b2482ac85b8a8b671fc39ef64aed8309b664736f6c63430008140033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
