@@ -1,405 +1,421 @@
-# AI-Sentinel - LSTM Crash Prediction System
+# Aegis Protocol - Decentralized Market Protection System
 
 ## 🎯 Overview
 
-AI-Sentinel is a real-time market crash prediction system using LSTM neural networks with Zero-Knowledge Machine Learning (ZKML) verification. This system provides live risk assessment, 24-hour trend analysis, and liquidity health monitoring.
+**Aegis Protocol** is a decentralized market defense system that combines real-time AI crash prediction with zero-knowledge cryptography and blockchain-based rescue mechanisms. The system protects user funds through automated detection of market instability and trustless verification of predictions.
+
+**Core Innovation:** LSTM neural network predictions proven via Risc Zero zkVM, enabling on-chain verification without revealing model weights.
 
 ---
 
-## 📁 Project Structure
+## � Repository Architecture
+
+This is a **monorepo** containing three independent modules that communicate through well-defined handoffs:
 
 ```
-ai-sentinel/
+aegis-protocol/
 ├── packages/
-│   ├── ml-sentinel/                    # ML inference engine
-│   │   ├── model/                      # LSTM model & inference
-│   │   │   ├── trained/                # Trained model files
-│   │   │   │   ├── aegis_lstm_model.h5 # Keras LSTM model
-│   │   │   │   └── network.onnx        # ONNX export for ZK
-│   │   │   ├── inference.py            # ⭐ Main inference engine
-│   │   │   └── test_enhanced_output.py # Output testing
-│   │   ├── config/
-│   │   │   └── constants.py            # Configuration paths
-│   │   ├── data-pipeline/
-│   │   │   └── data/
-│   │   │       └── market_depth.json   # Input market data
-│   │   ├── zk-circuit/                 # Zero-knowledge proofs
-│   │   └── logs/                       # Inference logs
+│   ├── ml-sentinel/                    # 🧠 The Intelligence (Member B)
+│   │   ├── data-pipeline/              # Node.js market data crawler
+│   │   │   └── src/crawler.js          # Real-time market depth scraper
+│   │   ├── model/                      # LSTM crash prediction
+│   │   │   ├── trained/
+│   │   │   │   └── aegis_lstm_model.h5 # Trained model
+│   │   │   └── inference.py            # ⭐ Real-time engine
+│   │   └── zk-circuit/                 # Risc Zero proof generator
+│   │       ├── risc0-verifier/         # zkVM implementation
+│   │       │   ├── guest/src/main.rs   # LSTM in zkVM
+│   │       │   └── host/src/main.rs    # Proof generator
+│   │       └── prove_adapter.py        # Python → Rust bridge
 │   │
-│   ├── frontend-integration-data/      # ⭐ Frontend data output
+│   ├── frontend-integration-data/      # 👁️ The Face (Member A)
 │   │   └── public/
-│   │       └── live_feed.json          # ⭐⭐ YOUR DATA SOURCE
+│   │       └── live_feed.json          # ⭐⭐ Real-time risk data
 │   │
-│   └── verification-proofs/            # ZK verification contracts
-│       └── contracts/
-│           └── Verifier.sol            # Blockchain verifier
+│   └── verification-proofs/            # 🏰 The Fortress (Member C)
+│       ├── contracts/
+│       │   └── Verifier.sol            # Risc Zero verifier
+│       └── proofs/
+│           └── risk_receipt.dat        # ⭐⭐ ZK proof output
 │
-└── .gitignore
+├── frontend-cockpit/                    # Next.js Dashboard (Member A)
+│   └── (reads live_feed.json + blockchain state)
+│
+└── packages/blockchain-evm/             # Smart Contracts (Member C)
+    ├── contracts/
+    │   ├── AegisCore.sol               # Main protocol logic
+    │   └── Verifier.sol                # ZK verification
+    └── scripts/
+        └── proof-relay.js              # ⭐ File watcher
 ```
+
+### Module Responsibilities
+
+| Module | Owner | Purpose | Tech Stack |
+|--------|-------|---------|------------|
+| **ml-sentinel** | Member B | Market monitoring, risk prediction, ZK proof generation | Python (TensorFlow), Rust (Risc Zero), Node.js |
+| **frontend-cockpit** | Member A | Real-time dashboard, user interface | Next.js, React, Tailwind |
+| **blockchain-evm** | Member C | On-chain verification, rescue mechanism | Solidity, Hardhat, Ethers.js |
 
 ---
 
-## 🚀 Quick Start for Frontend Team
+## 🔌 System Integration & Handoffs
 
-### Step 1: Run the Inference Engine
+**Philosophy:** No centralized API. Each module is independent and communicates through **file-based handoffs** and **blockchain events**.
 
-The ML team provides real-time predictions via a background service:
+### 🎨 Handoff 1: Frontend Integration (The Visuals)
 
-```bash
-# From project root
-python packages/ml-sentinel/model/inference.py
+#### How It Works
+
+**1. ML Sentinel → Frontend Data Flow**
+
+```mermaid
+graph LR
+    A[LSTM Inference] -->|Every 10s| B[live_feed.json]
+    B -->|HTTP Poll| C[Frontend Dashboard]
+    C -->|Display| D[Heartbeat Graph]
 ```
 
-**What happens:**
-- Loads trained LSTM model (60-timestep sequence)
-- Reads market data every 10 seconds
-- Outputs predictions to `packages/frontend-integration-data/public/live_feed.json`
-- Runs 24/7 in production
+**File:** `packages/frontend-integration-data/public/live_feed.json`
 
-**First-time note:** Engine needs 60 samples (~10 minutes) before making predictions.
-
----
-
-## 📊 Frontend Integration
-
-### The Data You Need
-
-**File Location:** `packages/frontend-integration-data/public/live_feed.json`
-
-**JSON Format:**
 ```json
 {
   "riskScore": 0.2648,
   "change24h": -12.5,
   "liquidityHealth": 0.9999,
-  "timestamp": "2025-12-14T01:45:09.038578",
+  "timestamp": "2025-12-14T01:45:09Z",
   "status": "normal"
 }
 ```
 
-**Field Descriptions:**
-
-| Field | Type | Range | Description |
-|-------|------|-------|-------------|
-| `riskScore` | float | 0.0 - 1.0 | LSTM crash probability prediction<br>• 0.0-0.6: Normal<br>• 0.6-0.8: Warning<br>• 0.8-1.0: Critical |
-| `change24h` | float | ±∞ | 24-hour percentage change in risk<br>• Negative = Risk decreasing<br>• Positive = Risk increasing<br>• 0.0 for first 24 hours |
-| `liquidityHealth` | float | 0.0 - ∞ | Buy Liquidity Ratio (BLR)<br>• <0.5: Very low liquidity<br>• 0.5-1.0: Normal<br>• >1.0: High liquidity |
-| `timestamp` | string | ISO 8601 | When prediction was generated |
-| `status` | string | enum | `"normal"` \| `"warning"` \| `"critical"` |
-
----
-
-### Integration Methods
-
-#### Option 1: Polling (Recommended for Development)
+**Frontend Implementation:**
 
 ```javascript
-// React Example
-import { useState, useEffect } from 'react';
-
-function MarketMonitor() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    // Poll every 3 seconds
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch('/live_feed.json');
-        const json = await response.json();
-        setData(json);
-      } catch (error) {
-        console.error('Failed to fetch market data:', error);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!data) return <div>Loading...</div>;
-
-  return (
-    <div>
-      <h2>Market Risk Monitor</h2>
-      <div className={`risk-${data.status}`}>
-        <p>Risk Score: {(data.riskScore * 100).toFixed(2)}%</p>
-        <p>24h Change: {data.change24h.toFixed(2)}%</p>
-        <p>Liquidity: {data.liquidityHealth.toFixed(4)}</p>
-        <p>Status: {data.status.toUpperCase()}</p>
-      </div>
-    </div>
-  );
-}
-```
-
-#### Option 2: Server-Sent Events (Production)
-
-```javascript
-// Backend server (Node.js/Express)
-const fs = require('fs');
-const express = require('express');
-const app = express();
-
-app.get('/api/risk-stream', (req, res) => {
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  
-  const sendData = () => {
-    const data = fs.readFileSync(
-      './packages/frontend-integration-data/public/live_feed.json', 
-      'utf8'
-    );
-    res.write(`data: ${data}\n\n`);
-  };
-
-  // Send every 3 seconds
-  const interval = setInterval(sendData, 3000);
-  sendData(); // Send immediately
-
-  req.on('close', () => clearInterval(interval));
-});
-```
-
-```javascript
-// Frontend (React)
+// React example - polls every 3 seconds
 useEffect(() => {
-  const eventSource = new EventSource('/api/risk-stream');
+  const interval = setInterval(async () => {
+    const res = await fetch('/live_feed.json');
+    const data = await res.json();
+    setRiskData(data); // Update heartbeat graph
+  }, 3000);
   
-  eventSource.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    setData(data);
-  };
-
-  return () => eventSource.close();
+  return () => clearInterval(interval);
 }, []);
 ```
 
+**2. Traffic Light State → Frontend**
+
+**❗ CRITICAL:** The "Traffic Light" (🟢 Green / 🔴 Red) is **NOT** read from `live_feed.json`.
+
+**Source:** Blockchain contract state via Web3
+
+```javascript
+// Read from AegisCore.sol
+const contract = new ethers.Contract(AEGIS_CORE_ADDRESS, ABI, provider);
+const isRedMode = await contract.isRedMode();
+
+// Display traffic light
+const trafficLight = isRedMode ? '🔴 RED - Rescue Active' : '🟢 GREEN - Normal';
+```
+
+**Why separate?** 
+- **Heartbeat Graph**: Needs frequent updates (every 3s) → `live_feed.json`
+- **Traffic Light**: Infrequent state changes → Blockchain query
+
 ---
 
-### UI/UX Recommendations
+### 🔗 Handoff 2: Blockchain Integration (The Trigger)
 
-**Color Coding by Status:**
-```css
-.risk-normal { 
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
+#### The File Watcher Pattern
 
-.risk-warning { 
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-}
+**Problem:** How does the blockchain know when a crash is predicted?
 
-.risk-critical { 
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-  color: white;
-  animation: pulse 2s infinite;
+**Solution:** The blockchain team runs a **Node.js file watcher** that monitors the proof directory.
+
+```javascript
+// blockchain-evm/scripts/proof-relay.js
+const fs = require('fs');
+const { ethers } = require('ethers');
+
+const PROOF_DIR = '../../verification-proofs/proofs/';
+const PROOF_FILE = 'risk_receipt.dat';
+
+// Watch for new proofs
+fs.watch(PROOF_DIR, async (eventType, filename) => {
+  if (filename === PROOF_FILE) {
+    const proof = fs.readFileSync(PROOF_DIR + PROOF_FILE);
+    await relayProofToChain(proof);
+  }
+});
+
+async function relayProofToChain(proofData) {
+  const aegisCore = new ethers.Contract(AEGIS_CORE_ADDRESS, ABI, signer);
+  
+  // ⭐ CRITICAL: Call AegisCore.triggerRedMode(), NOT Verifier.verify()
+  const tx = await aegisCore.triggerRedMode(proofData);
+  await tx.wait();
+  
+  console.log('✅ Red mode activated on-chain');
 }
 ```
 
-**Display Components:**
-1. **Risk Gauge** - Circular progress showing riskScore (0-100%)
-2. **Trend Indicator** - Arrow showing 24h change direction
-3. **Liquidity Bar** - Health meter for liquidityHealth
-4. **Status Badge** - Color-coded alert level
+#### Complete Flow
+
+```mermaid
+graph TD
+    A[ML Sentinel: Risk > 0.8] -->|1. Generate Proof| B[risk_receipt.dat]
+    B -->|2. File Created| C[proof-relay.js Detects]
+    C -->|3. Read Proof| D[Load proof bytes]
+    D -->|4. Submit TX| E[AegisCore.triggerRedMode]
+    E -->|5. Internal Verification| F[Calls Verifier.sol]
+    F -->|6. Proof Valid?| G{Result}
+    G -->|Yes| H[Flip to RED Mode]
+    G -->|No| I[Reject TX]
+    H -->|7. Emit Event| J[RedModeActivated]
+    J -->|8. Enable| K[Rescue Button]
+```
+
+**Step-by-Step:**
+
+1. **Generation (ML):** Sentinel detects `riskScore > 0.8`
+   ```python
+   # inference.py
+   if risk_score > 0.8:
+       generate_risc_zero_proof(model, market_sequence)
+       # Writes to: verification-proofs/proofs/risk_receipt.dat
+   ```
+
+2. **Relay (Blockchain):** File watcher detects new proof
+   ```javascript
+   // Monitors: verification-proofs/proofs/
+   // Triggers: When risk_receipt.dat changes
+   ```
+
+3. **Execution (Smart Contract):** `AegisCore.triggerRedMode(proof)`
+   ```solidity
+   function triggerRedMode(bytes calldata zkProof) external {
+       // 1. Verify proof via Verifier.sol
+       require(verifier.verifyProof(zkProof), "Invalid proof");
+       
+       // 2. Flip state
+       isRedMode = true;
+       
+       // 3. Enable rescue
+       emit RedModeActivated(block.timestamp);
+   }
+   ```
+
+4. **Result:** System state changes to RED
+   - Frontend polls: `await aegisCore.isRedMode()` → `true`
+   - Rescue button appears on dashboard
+   - Users can withdraw funds safely
+
+**Key Insight:** `Verifier.sol` is **internal** to `AegisCore.sol`. The blockchain team never calls it directly - it's automatically invoked during `triggerRedMode()`.
 
 ---
 
-## 🔧 For ML Team
+## � Quick Start
 
-### Running the System
+### For ML Team (Member B)
 
-**1. Start Inference Engine:**
+**Run Inference Engine:**
 ```bash
 python packages/ml-sentinel/model/inference.py
 ```
 
-**Output:** Real-time predictions to `packages/frontend-integration-data/public/live_feed.json`
+**What it does:**
+- Monitors market data every 10 seconds
+- Outputs to `frontend-integration-data/public/live_feed.json`
+- Generates ZK proofs when risk > 0.8
 
-**2. Generate ZK Proofs (Optional):**
+**Test Proof Generation:**
 ```bash
-python packages/ml-sentinel/zk-circuit/scripts/zk_setup_placeholder.py
-```
-
-**Output:** Verification contract at `packages/verification-proofs/contracts/Verifier.sol`
-
-**3. Verify Handoff:**
-```bash
-python packages/verify_handoff.py
-```
-
-**Checks:** All ZK artifacts and contracts are generated correctly.
-
----
-
-## 📝 Key Configuration
-
-**Update Output Paths:**
-File: `packages/ml-sentinel/config/constants.py`
-
-```python
-# Frontend output location
-FRONTEND_OUTPUT = str(ML_SENTINEL_ROOT.parent / 
-                     "frontend-integration-data" / 
-                     "public" / "live_feed.json")
-
-# Model paths
-MODEL_PATH = str(ML_SENTINEL_ROOT / "model" / "trained" / "aegis_lstm_model.h5")
-
-# Inference settings
-INFERENCE_INTERVAL_SECONDS = 10  # Update every 10s
-SEQUENCE_LENGTH = 60             # 60 timesteps required
+cd packages/ml-sentinel/zk-circuit
+python test_proof_generation.py
 ```
 
 ---
 
-## 🎨 Example Dashboard Implementation
+### For Frontend Team (Member A)
 
+**1. Read Heartbeat Data:**
 ```javascript
-// Complete dashboard component
-function CrashPredictionDashboard() {
-  const [metrics, setMetrics] = useState(null);
-  const [history, setHistory] = useState([]);
+// Poll live_feed.json every 3 seconds
+const data = await fetch('/live_feed.json').then(r => r.json());
+// Display: riskScore, change24h, liquidityHealth
+```
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch('/live_feed.json');
-      const data = await res.json();
-      setMetrics(data);
-      setHistory(prev => [...prev.slice(-20), data]); // Keep last 20
-    };
+**2. Read Traffic Light:**
+```javascript
+// Query blockchain state
+const isRed = await aegisCoreContract.isRedMode();
+// Show: 🟢 GREEN or 🔴 RED
+```
 
-    fetchData();
-    const interval = setInterval(fetchData, 3000);
-    return () => clearInterval(interval);
-  }, []);
+---
 
-  return (
-    <Dashboard status={metrics?.status}>
-      <MetricCard
-        title="Crash Risk"
-        value={`${(metrics?.riskScore * 100).toFixed(1)}%`}
-        trend={metrics?.change24h}
-        icon={<AlertIcon />}
-      />
-      
-      <MetricCard
-        title="24h Change"
-        value={`${metrics?.change24h > 0 ? '+' : ''}${metrics?.change24h.toFixed(2)}%`}
-        status={metrics?.change24h > 0 ? 'warning' : 'normal'}
-        icon={<TrendIcon />}
-      />
-      
-      <MetricCard
-        title="Liquidity Health"
-        value={metrics?.liquidityHealth.toFixed(4)}
-        status={metrics?.liquidityHealth > 1 ? 'normal' : 'warning'}
-        icon={<WaterDropIcon />}
-      />
+### For Blockchain Team (Member C)
 
-      <ChartContainer>
-        <LineChart data={history} />
-      </ChartContainer>
-    </Dashboard>
-  );
+**1. Deploy Contracts:**
+```bash
+npx hardhat deploy --network sepolia
+# Deploys: AegisCore.sol + Verifier.sol
+```
+
+**2. Run Proof Relay:**
+```bash
+node scripts/proof-relay.js
+# Watches: verification-proofs/proofs/risk_receipt.dat
+# Calls: AegisCore.triggerRedMode(proof)
+```
+
+---
+
+## 🧪 Testing Integration
+
+### End-to-End Test
+
+**1. Generate Test Proof (ML):**
+```bash
+python packages/ml-sentinel/zk-circuit/test_proof_generation.py
+# Creates: verification-proofs/proofs/risk_receipt.dat
+```
+
+**2. Relay detects new file (Blockchain):**
+```
+[proof-relay.js] New proof detected!
+[proof-relay.js] Submitting to AegisCore...
+[proof-relay.js] ✅ TX: 0xabc123... confirmed
+```
+
+**3. Frontend updates (Dashboard):**
+```javascript
+// Before: isRedMode = false → 🟢 GREEN
+// After:  isRedMode = true  → 🔴 RED + Rescue Button
+```
+
+---
+
+## 📋 Data Formats
+
+### Frontend Data (`live_feed.json`)
+
+| Field | Type | Range | Purpose |
+|-------|------|-------|---------|
+| `riskScore` | float | 0.0-1.0 | LSTM prediction (1.0 = 100% crash probability) |
+| `change24h` | float | ±∞ | 24-hour trend (negative = risk decreasing) |
+| `liquidityHealth` | float | 0.0-∞ | Buy Liquidity Ratio (>1.0 = healthy) |
+| `timestamp` | string | ISO 8601 | When prediction was made |
+| `status` | string | enum | `"normal"` \| `"warning"` \| `"critical"` |
+
+### ZK Proof (`risk_receipt.dat`)
+
+```json
+{
+  "risk_score": 0.8523,
+  "proof_hash": "cd3fa70c21dcce8d...",
+  "timestamp": 1702512000,
+  "journal": {
+    "public_output": 0.8523
+  }
 }
 ```
 
----
-
-## 🔐 Zero-Knowledge Verification (Advanced)
-
-For blockchain team: Deploy the generated Solidity contract to verify predictions on-chain.
-
-**Contract:** `packages/verification-proofs/contracts/Verifier.sol`
-
-**Usage:**
-```solidity
-function verifyPrediction(
-    bytes calldata proof,
-    uint256[] calldata publicInputs
-) external returns (bool);
-```
+**Note:** In production (Linux + Risc Zero), this will be **binary data** (bincode serialization). For hackathon demo, it's JSON.
 
 ---
 
-## 🚨 Important Notes
+## � Security Model
 
-### For Frontend Developers:
+### Zero-Knowledge Proofs
 
-1. **Poll Frequency:** Update every 2-3 seconds (model updates every 10s)
-2. **First 24 Hours:** `change24h` will be `0.0` until sufficient data
-3. **Error Handling:** File may not exist initially - handle gracefully
-4. **Status Thresholds:**
-   - Normal: riskScore < 0.6
-   - Warning: 0.6 ≤ riskScore < 0.8
-   - Critical: riskScore ≥ 0.8
+**Why?** Prove crash prediction is correct without revealing model weights (intellectual property).
 
-### For ML Team:
+**How?**
+1. LSTM forward pass runs **inside** Risc Zero zkVM (Rust)
+2. zkVM generates cryptographic proof of execution
+3. Contract verifies proof on-chain
+4. Model weights never leave the zkVM
 
-1. **Model Location:** `packages/ml-sentinel/model/trained/aegis_lstm_model.h5`
-2. **Startup Time:** ~10 minutes to collect 60 samples before first prediction
-3. **Logging:** Check `packages/ml-sentinel/logs/sentinel.log` for issues
+**Implementation:**
+- **Guest Code:** `packages/ml-sentinel/zk-circuit/risc0-verifier/methods/guest/src/main.rs`
+- **Host Code:** `packages/ml-sentinel/zk-circuit/risc0-verifier/host/src/main.rs`
+- **Verifier:** `packages/verification-proofs/contracts/Verifier.sol`
 
 ---
 
 ## 📦 Dependencies
 
-**ML Team:**
+### ML Sentinel
 ```bash
 pip install tensorflow numpy pandas
+# For ZK (production): Rust + cargo-risczero
 ```
 
-**Frontend Team:**
-- Standard fetch API (built-in)
-- No additional dependencies required
-- Pure JSON polling approach
+### Frontend
+```bash
+npm install ethers  # For Web3 queries
+# No special deps for live_feed.json polling
+```
+
+### Blockchain
+```bash
+npm install hardhat ethers
+# Deploy: AegisCore.sol + Verifier.sol
+```
 
 ---
 
 ## 🤝 Team Collaboration
 
-**ML Team Provides:**
-- Running inference engine (24/7 service)
-- Updated `live_feed.json` every 10 seconds
-- Model retraining when needed
-
-**Frontend Team Consumes:**
-- `live_feed.json` file via HTTP polling
-- Real-time UI updates every 2-3 seconds
-- Visual representation of metrics
-
-**Blockchain Team:**
-- Deploys `Verifier.sol` contract
-- Verifies high-risk predictions on-chain
-- Reads proofs from `packages/verification-proofs/proofs/`
-
----
-
-## 📞 Support
-
-**File Issues:** Check logs at `packages/ml-sentinel/logs/sentinel.log`
-
-**Missing Data:** Ensure inference engine is running:
-```bash
-ps aux | grep inference.py  # Linux/Mac
-Get-Process | Where-Object {$_.ProcessName -like "*python*"}  # Windows
-```
-
-**Questions:** Contact ML team for model-related issues, frontend team for integration help.
+| Task | Team | Deliverable |
+|------|------|-------------|
+| **Generate risk data** | ML (B) | `live_feed.json` updated every 10s |
+| **Generate ZK proofs** | ML (B) | `risk_receipt.dat` when risk > 0.8 |
+| **Display heartbeat** | Frontend (A) | Poll `live_feed.json`, render graph |
+| **Display traffic light** | Frontend (A) | Query `AegisCore.isRedMode()` |
+| **Relay proofs** | Blockchain (C) | Watch proof file, call contract |
+| **Verify & flip state** | Blockchain (C) | `AegisCore.triggerRedMode()` |
 
 ---
 
 ## 🎯 Production Checklist
 
-- [ ] Inference engine running as systemd service / Windows service
-- [ ] `live_feed.json` accessible via web server (nginx/Apache)
-- [ ] Frontend polling every 2-3 seconds
-- [ ] Error handling for missing/stale data
-- [ ] Alert system for critical status
-- [ ] Dashboard displays all 3 metrics clearly
-- [ ] Mobile responsive design
-- [ ] ZK proofs generated for critical events
+- [ ] **ML:** Inference engine running as service (systemd/Windows Service)
+- [ ] **ML:** ZK proofs auto-generate when risk > 0.8
+- [ ] **Frontend:** Dashboard polls `live_feed.json` every 3 seconds
+- [ ] **Frontend:** Queries `AegisCore.isRedMode()` for traffic light
+- [ ] **Blockchain:** Proof relay script running as background service
+- [ ] **Blockchain:** `AegisCore.sol` + `Verifier.sol` deployed to mainnet
+- [ ] **All:** Error handling for network issues, missing files
+- [ ] **All:** Monitoring & alerting for all components
 
 ---
 
-**Built with ❤️ by Team Aegis**
+## 📞 Support & Troubleshooting
+
+**ML Issues:**
+- Check logs: `packages/ml-sentinel/logs/sentinel.log`
+- Verify model exists: `packages/ml-sentinel/model/trained/aegis_lstm_model.h5`
+
+**Frontend Issues:**
+- Ensure `live_feed.json` is accessible via HTTP
+- Check browser console for fetch errors
+
+**Blockchain Issues:**
+- Verify proof relay is running: `ps aux | grep proof-relay`
+- Check contract events: `AegisCore.RedModeActivated`
+
+---
+
+## � Architecture Highlights
+
+**✅ Decentralized:** No central server - files + blockchain  
+**✅ Trustless:** ZK proofs verify predictions cryptographically  
+**✅ Modular:** Three independent teams, clean interfaces  
+**✅ Real-time:** 10-second inference, 3-second frontend updates  
+**✅ Scalable:** File-based handoffs support horizontal scaling  
+
+---
+
+**Built by Team Aegis for ETHIndia 2024** 🚀

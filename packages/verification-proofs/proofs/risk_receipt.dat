@@ -1,0 +1,11 @@
+{
+  "version": "mock-v1.0-hackathon",
+  "risk_score": 0.42021670937538147,
+  "proof_hash": "cd3fa70c21dcce8d3f0ff28ff86ad7f0493b4476ecf69e81e494c02d2d833b97",
+  "timestamp": 1765663279.8769834,
+  "note": "DEMO MODE - Real ZK proof requires Linux deployment",
+  "journal": {
+    "public_output": 0.42021670937538147,
+    "commit_hash": "cd3fa70c21dcce8d"
+  }
+}

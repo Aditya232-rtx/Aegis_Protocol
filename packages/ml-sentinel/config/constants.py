@@ -26,9 +26,9 @@ INFERENCE_INTERVAL_SECONDS = 10  # How often to run inference
 SEQUENCE_LENGTH = 60  # Must match training configuration
 FEATURE_COLUMNS = ['blr', 'buy_volume', 'sell_volume', 'mid_price']
 
-# Risk Thresholds
-CRASH_THRESHOLD = 0.8  # Trigger ZK proof if risk > 0.8
-WARNING_THRESHOLD = 0.6
+# Risk Thresholds (TESTING MODE - Lower threshold for easier proof generation)
+CRASH_THRESHOLD = 0.3  # Trigger ZK proof if risk > 0.3 [TESTING]
+WARNING_THRESHOLD = 0.2
 
 # Feature Normalization Ranges (from training)
 BLR_MIN = 0.3
