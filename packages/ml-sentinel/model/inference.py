@@ -78,39 +78,119 @@ class SentinelInferenceEngine:
     def read_market_data(self):
         """Read latest market data from crawler output"""
         try:
+            # Check if file exists
+            if not os.path.exists(MARKET_DATA_INPUT):
+                logger.warning(f"Market data file not found: {MARKET_DATA_INPUT}")
+                logger.info("Using default safe values until data becomes available")
+                return self._get_default_values()
+            
+            # Read and parse JSON
             with open(MARKET_DATA_INPUT, 'r') as f:
-                data = json.load(f)
+                content = f.read().strip()
+                
+                # Handle empty file
+                if not content:
+                    logger.warning("Market data file is empty")
+                    return self._get_default_values()
+                
+                try:
+                    data = json.loads(content)
+                except json.JSONDecodeError as je:
+                    logger.error(f"Invalid JSON in market data file: {je}")
+                    logger.info("Using default safe values")
+                    return self._get_default_values()
             
             # Handle both list and dict formats
             if isinstance(data, list):
                 if len(data) == 0:
                     logger.warning("Market data is empty list")
-                    data = {}
+                    return self._get_default_values()
                 else:
                     data = data[-1]  # Take most recent entry
             
-            # Extract features (with defaults)
-            features = {
-                'blr': data.get('blr', data.get('buyLiquidityRatio', 1.0)),
-                'buy_volume': data.get('buyVolume', data.get('buy_volume', 5000)),
-                'sell_volume': data.get('sellVolume', data.get('sell_volume', 5000)),
-                'mid_price': data.get('midPrice', data.get('mid_price', 3000))
-            }
+            # Validate data is dict
+            if not isinstance(data, dict):
+                logger.error(f"Unexpected data type: {type(data)}")
+                return self._get_default_values()
+            
+            # Extract features with validation
+            features = self._extract_and_validate_features(data)
             
             return features
         
         except FileNotFoundError:
             logger.warning(f"Market data file not found: {MARKET_DATA_INPUT}")
-            # Return default safe values
-            return {
-                'blr': 1.2,
-                'buy_volume': 5000,
-                'sell_volume': 4000,
-                'mid_price': 3000
-            }
+            return self._get_default_values()
+        
+        except PermissionError:
+            logger.error(f"Permission denied reading: {MARKET_DATA_INPUT}")
+            return self._get_default_values()
+        
         except Exception as e:
-            logger.error(f"Error reading market data: {e}")
+            logger.error(f"Unexpected error reading market data: {e}")
             return None
+    
+    def _get_default_values(self):
+        """Return default safe values when real data unavailable"""
+        return {
+            'blr': 1.0,          # Neutral liquidity
+            'buy_volume': 5000,   # Average volume
+            'sell_volume': 5000,  # Balanced
+            'mid_price': 3000     # Typical ETH price
+        }
+    
+    def _extract_and_validate_features(self, data):
+        """Extract and validate features from data dict"""
+        # Extract with fallbacks for different field names
+        blr = data.get('blr', data.get('buyLiquidityRatio'))
+        buy_volume = data.get('buyVolume', data.get('buy_volume'))
+        sell_volume = data.get('sellVolume', data.get('sell_volume'))
+        mid_price = data.get('midPrice', data.get('mid_price'))
+        
+        # Validate all fields are present
+        if any(x is None for x in [blr, buy_volume, sell_volume, mid_price]):
+            missing = [k for k, v in {
+                'blr': blr, 'buy_volume': buy_volume,
+                'sell_volume': sell_volume, 'mid_price': mid_price
+            }.items() if v is None]
+            logger.warning(f"Missing fields in market data: {missing}")
+            logger.info("Using default values for missing fields")
+            
+            # Fill in missing values with defaults
+            defaults = self._get_default_values()
+            blr = blr if blr is not None else defaults['blr']
+            buy_volume = buy_volume if buy_volume is not None else defaults['buy_volume']
+            sell_volume = sell_volume if sell_volume is not None else defaults['sell_volume']
+            mid_price = mid_price if mid_price is not None else defaults['mid_price']
+        
+        # Validate data types and ranges
+        try:
+            blr = float(blr)
+            buy_volume = float(buy_volume)
+            sell_volume = float(sell_volume)
+            mid_price = float(mid_price)
+            
+            # Sanity checks
+            if blr < 0 or blr > 10:
+                logger.warning(f"BLR out of expected range: {blr}, using 1.0")
+                blr = 1.0
+            if buy_volume < 0:
+                buy_volume = 0
+            if sell_volume < 0:
+                sell_volume = 0
+            if mid_price < 0:
+                mid_price = 3000
+                
+        except (ValueError, TypeError) as e:
+            logger.error(f"Invalid numeric values in market data: {e}")
+            return self._get_default_values()
+        
+        return {
+            'blr': blr,
+            'buy_volume': buy_volume,
+            'sell_volume': sell_volume,
+            'mid_price': mid_price
+        }
     
     def normalize_features(self, features):
         """Normalize features to [0, 1] range"""
