@@ -89,12 +89,12 @@ async function main() {
     console.log("--- FUNDING PERSONAS (HOLLYWOOD STYLE) ---");
     const toHex = (amt) => "0x" + (BigInt(amt) * 10n ** 18n).toString(16);
 
-    // The Whale: 500,000 ETH (5 Lakhs)
+    // The Whale: 200,000 ETH (2 Lakhs)
     await ethers.provider.send("hardhat_setBalance", [
         whale.address,
-        toHex(500000),
+        toHex(200000),
     ]);
-    console.log(`Verified: The Whale balance set to 500,000 ETH`);
+    console.log(`Verified: The Whale balance set to 200,000 ETH`);
 
     // The Ancient One: 1,000 ETH
     await ethers.provider.send("hardhat_setBalance", [
@@ -103,19 +103,19 @@ async function main() {
     ]);
     console.log(`Verified: The Ancient One balance set to 1,000 ETH`);
 
-    // The Rookie: 50 ETH (Struggling)
+    // The Rookie: 700 ETH
     await ethers.provider.send("hardhat_setBalance", [
         rookie.address,
-        toHex(50),
+        toHex(700),
     ]);
-    console.log(`Verified: The Rookie balance set to 50 ETH`);
+    console.log(`Verified: The Rookie balance set to 700 ETH`);
 
-    // Clean Sheet: 200 ETH
+    // Clean Sheet: 500 ETH
     await ethers.provider.send("hardhat_setBalance", [
         cleanSheet.address,
-        toHex(200),
+        toHex(500),
     ]);
-    console.log(`Verified: Clean Sheet balance set to 200 ETH`);
+    console.log(`Verified: Clean Sheet balance set to 500 ETH`);
 
     // Fund Sponge
     const debtAmount = ethers.parseUnits("1000000", 18); // 1M USDC
