@@ -1,0 +1,32 @@
+{
+    "name": "aegis-sentinel-data-pipeline",
+    "version": "2.0.0",
+    "description": "Aegis Protocol - Sentinel Layer: Market Depth Intelligence Pipeline (Production)",
+    "main": "src/crawler.js",
+    "scripts": {
+        "start": "node src/crawler.js",
+        "start:dev": "SET HEADLESS=false&& node src/crawler.js",
+        "start:continuous": "SET ENABLE_PERIODIC_SCRAPING=true&& node src/crawler.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "binance",
+        "scraper",
+        "market-depth",
+        "liquidity",
+        "machine-learning",
+        "defi",
+        "aegis-protocol",
+        "lstm",
+        "zk-proof"
+    ],
+    "author": "Aegis Protocol Team - Sentinel Layer",
+    "license": "MIT",
+    "dependencies": {
+        "puppeteer": "^24.33.0"
+    },
+    "devDependencies": {},
+    "engines": {
+        "node": ">=14.0.0"
+    }
+}
