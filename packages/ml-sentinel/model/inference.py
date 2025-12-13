@@ -3,7 +3,7 @@ Production Inference Engine
 24/7 real-time LSTM risk score prediction with frontend integration
 
 Input: data-pipeline/data/market_depth.json
-Output: ../../../frontend-cockpit/public/live_feed.json
+Output: ../../../frontend-integration-data/public/live_feed.json
 """
 
 import os

@@ -15,7 +15,7 @@ ONNX_MODEL_PATH = str(ML_SENTINEL_ROOT / "model" / "trained" / "network.onnx")
 
 # Data Paths
 MARKET_DATA_INPUT = str(ML_SENTINEL_ROOT / "data-pipeline" / "data" / "market_depth.json")
-FRONTEND_OUTPUT = str(ML_SENTINEL_ROOT.parent / "frontend-cockpit" / "public" / "live_feed.json")
+FRONTEND_OUTPUT = str(ML_SENTINEL_ROOT.parent / "frontend-integration-data" / "public" / "live_feed.json")
 
 # Logging
 LOG_FILE = str(ML_SENTINEL_ROOT / "logs" / "sentinel.log")

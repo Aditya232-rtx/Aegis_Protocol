@@ -36,7 +36,7 @@ def test_enhanced_output():
     }
     
     # Test output path
-    output_path = Path("../../../frontend-cockpit/public/live_feed_test.json")
+    output_path = Path("../../../frontend-integration-data/public/live_feed_test.json")
     os.makedirs(output_path.parent, exist_ok=True)
     
     # Write JSON

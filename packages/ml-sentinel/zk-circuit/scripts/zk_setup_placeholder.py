@@ -26,7 +26,7 @@ VK_FILE = ZK_DIR / "vk.key"
 SRS_FILE = ZK_DIR / "kzg.srs"
 # Fixed path for packages structure
 ROOT_DIR = SCRIPT_DIR.parent.parent.parent
-VERIFIER_CONTRACT = ROOT_DIR / "blockchain-evm" / "contracts" / "Verifier.sol"
+VERIFIER_CONTRACT = ROOT_DIR / "verification-proofs" / "contracts" / "Verifier.sol"
 
 def setup_zk_circuit():
     """Create placeholder ZK artifacts"""

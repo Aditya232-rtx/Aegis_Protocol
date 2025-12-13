@@ -1,7 +1,9 @@
 # AI-Sentinel .gitignore
 
-# Old root-level directories (moved to packages/)
-# These should not be tracked - close editor tabs and delete manually
+# Old root-level directories (moved and renamed in packages/)
+# packages/ml-sentinel (ML code)
+# packages/frontend-integration-data (renamed from frontend-cockpit) 
+# packages/verification-proofs (renamed from blockchain-evm)
 # The / prefix means these patterns only match at repository root
 /ml-sentinel/
 /frontend-cockpit/

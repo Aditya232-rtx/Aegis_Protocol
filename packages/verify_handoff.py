@@ -16,7 +16,7 @@ from pathlib import Path
 
 # Define expected paths
 ZK_DIR = Path("packages/ml-sentinel/zk-circuit")
-BLOCKCHAIN_DIR = Path("packages/blockchain-evm")
+BLOCKCHAIN_DIR = Path("packages/verification-proofs")
 
 EXPECTED_FILES = {
     "Proving Key": ZK_DIR / "pk.key",
@@ -80,7 +80,7 @@ def verify_handoff():
             print(f"    → {path}")
         print(f"\n🎯 Member C can now:")
         print(f"  1. Deploy Verifier.sol to blockchain")
-        print(f"  2. Read proofs from packages/blockchain-evm/proofs/")
+        print(f"  2. Read proofs from packages/verification-proofs/proofs/")
         print(f"  3. Verify crash predictions on-chain")
     else:
         print("⏳ HANDOFF PENDING")
