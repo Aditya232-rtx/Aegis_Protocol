@@ -1,0 +1,12 @@
+// Placeholder for Python LSTM inference API
+// This directory will contain the inference service
+
+/*
+ * Future Structure:
+ * 
+ * inference/
+ * ├── app.py                # Flask/FastAPI server
+ * ├── predictor.py          # LSTM prediction logic
+ * ├── model_loader.py       # Load trained model
+ * └── requirements.txt      # Python dependencies
+ */

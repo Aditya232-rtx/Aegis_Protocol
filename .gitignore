@@ -2,9 +2,10 @@
 
 # Old root-level directories (moved to packages/)
 # These should not be tracked - close editor tabs and delete manually
-ml-sentinel/
-frontend-cockpit/
-blockchain-evm/
+# The / prefix means these patterns only match at repository root
+/ml-sentinel/
+/frontend-cockpit/
+/blockchain-evm/
 
 # Python
 __pycache__/

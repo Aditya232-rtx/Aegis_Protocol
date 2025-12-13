@@ -1,0 +1,16 @@
+[
+  {
+    "timestamp": "2025-12-13T08:56:10.403Z",
+    "blr": 0.9999,
+    "buyVolume": 3116.51,
+    "sellVolume": 3116.96,
+    "midPrice": 3116.73,
+    "alertTriggered": false,
+    "rawOrders": {
+      "buyCount": 1,
+      "sellCount": 1,
+      "filteredBuyCount": 1,
+      "filteredSellCount": 1
+    }
+  }
+]

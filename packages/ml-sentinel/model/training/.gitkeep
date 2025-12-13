@@ -1,0 +1,13 @@
+// Placeholder for Python LSTM training scripts
+// This directory will contain the model training pipeline
+
+/*
+ * Future Structure:
+ * 
+ * training/
+ * ├── train.py              # Main training script
+ * ├── data_loader.py        # Load CSV data
+ * ├── model.py              # LSTM architecture
+ * ├── preprocess.py         # Data preprocessing
+ * └── requirements.txt      # Python dependencies
+ */
