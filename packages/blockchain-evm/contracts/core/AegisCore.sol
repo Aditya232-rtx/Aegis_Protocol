@@ -30,7 +30,7 @@ contract AegisCore is AccessControl, Pausable {
     ) {
         verifier = IVerifier(_verifier);
         identityRegistry = IUnstoppable(_identityRegistry);
-        backstopPool = BackstopPool(_backstopPool);
+        backstopPool = BackstopPool(payable(_backstopPool));
         
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(SENTINEL_ROLE, _sentinel);
@@ -58,9 +58,13 @@ contract AegisCore is AccessControl, Pausable {
         emit RiskStateChanged(oldState, _newState);
         
         if (_newState == RiskState.RED) {
-            _pause();
+            if (!paused()) {
+                _pause();
+            }
         } else {
-            _unpause();
+            if (paused()) {
+                _unpause();
+            }
         }
     }
 }

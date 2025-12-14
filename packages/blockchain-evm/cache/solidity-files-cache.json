@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/adityajadhav/Aegis/Aegis_Protocol/packages/blockchain-evm/contracts/core/AegisCore.sol": {
-      "lastModificationDate": 1765622907940,
-      "contentHash": "2f03c21599fa3f7e1cb5401fddc60d7d",
+      "lastModificationDate": 1765687036490,
+      "contentHash": "7d72b2229e9bc22b709663a61c94cae0",
       "sourceName": "contracts/core/AegisCore.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -45,8 +45,8 @@
       ]
     },
     "/Users/adityajadhav/Aegis/Aegis_Protocol/packages/blockchain-evm/contracts/interfaces/IVerifier.sol": {
-      "lastModificationDate": 1765622907941,
-      "contentHash": "60b0af83410c522aac384a0e47c42d09",
+      "lastModificationDate": 1765684879908,
+      "contentHash": "98a34f2d17c736ccdd7042e5a31907c2",
       "sourceName": "contracts/interfaces/IVerifier.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -82,8 +82,8 @@
       ]
     },
     "/Users/adityajadhav/Aegis/Aegis_Protocol/packages/blockchain-evm/contracts/core/BackstopPool.sol": {
-      "lastModificationDate": 1765643322463,
-      "contentHash": "e04afa59b9d7be7bb9d0fcf2ef53e112",
+      "lastModificationDate": 1765687010239,
+      "contentHash": "6b26d8f9cc8c1d4d7a511c31fc4e1a2a",
       "sourceName": "contracts/core/BackstopPool.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -121,7 +121,9 @@
         "^0.8.20"
       ],
       "artifacts": [
-        "BackstopPool"
+        "BackstopPool",
+        "IAegisCore",
+        "IAegisPool"
       ]
     },
     "/Users/adityajadhav/Aegis/Aegis_Protocol/packages/blockchain-evm/contracts/interfaces/IUnstoppable.sol": {
@@ -540,8 +542,8 @@
       ]
     },
     "/Users/adityajadhav/Aegis/Aegis_Protocol/packages/blockchain-evm/contracts/core/AegisPool.sol": {
-      "lastModificationDate": 1765646323107,
-      "contentHash": "af68c06e5d805ef52dcfbc148c7b789c",
+      "lastModificationDate": 1765686311576,
+      "contentHash": "1bc4c231a2f7e43e0cc90327cb9e6586",
       "sourceName": "contracts/core/AegisPool.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -978,8 +980,8 @@
       ]
     },
     "/Users/adityajadhav/Aegis/Aegis_Protocol/packages/blockchain-evm/contracts/security/Verifier.sol": {
-      "lastModificationDate": 1765637822585,
-      "contentHash": "dc55626bce12a6093b6f432b5f250dad",
+      "lastModificationDate": 1765684956948,
+      "contentHash": "4ab0ee2c7bf8f319c14eaea972c92c85",
       "sourceName": "contracts/security/Verifier.sol",
       "solcConfig": {
         "version": "0.8.20",

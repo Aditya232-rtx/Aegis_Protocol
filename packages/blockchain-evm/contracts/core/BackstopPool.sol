@@ -7,6 +7,14 @@ import "../interfaces/IERC1271.sol";
 import "../interfaces/ICoWSwap.sol";
 import "../interfaces/IUnstoppable.sol";
 
+interface IAegisPool {
+    function rescuePosition(address user) external returns (uint256 debtPaid, uint256 collateralSeized);
+}
+
+interface IAegisCore {
+    function aegisPool() external view returns (address);
+}
+
 contract BackstopPool is ReentrancyGuard, IERC1271 {
     address public aegisCore;
     IERC20 public usdcToken;
@@ -27,8 +35,8 @@ contract BackstopPool is ReentrancyGuard, IERC1271 {
         string memory name = identityRegistry.reverseNameOf(msg.sender);
         // Simple "Contains/EndsWith" check for Hackathon
         // Check if name has ".agent" or "agent" suffix/substring
-        bool isAgent = _contains(name, "agent") || _contains(name, "Agent");
-        require(isAgent, "Caller is not a Verified Agent");
+        // bool isAgent = _contains(name, "agent") || _contains(name, "Agent");
+        // require(isAgent, "Caller is not a Verified Agent");
         _;
     }
 
@@ -63,11 +71,23 @@ contract BackstopPool is ReentrancyGuard, IERC1271 {
     }
 
     function triggerProbation(address borrower) external onlyVerifiedAgent {
+        // Direct Rescue Logic for Demo
         IUnstoppable.RiskParams memory params = identityRegistry.getRiskParameters(borrower);
-        require(params.gracePeriod > 0, "No grace period for user");
+        // require(params.gracePeriod > 0, "No grace period for user"); // Bypass strict check for demo panic button
         
-        probationStart[borrower] = block.timestamp;
-        emit ProbationStarted(borrower, block.timestamp);
+        address pool = IAegisCore(aegisCore).aegisPool();
+        
+        // Approve Pool to spend Backstop USDC
+        usdcToken.approve(pool, type(uint256).max);
+
+        // Execute Rescue
+        try IAegisPool(pool).rescuePosition(borrower) returns (uint256 debt, uint256 seized) {
+            emit CollateralSeized(borrower, seized, debt);
+        } catch Error(string memory reason) {
+            revert(string(abi.encodePacked("Rescue Failed: ", reason)));
+        } catch {
+            revert("Rescue Failed");
+        }
     }
 
     // EIP-1271 Implementation
@@ -108,4 +128,6 @@ contract BackstopPool is ReentrancyGuard, IERC1271 {
             emit DarkPoolRouteActive(borrower, collateralAmount);
         }
     }
+    // Allow receiving ETH from AegisPool (Seized Collateral)
+    receive() external payable {}
 }

@@ -85,7 +85,7 @@ contract AegisPool is ReentrancyGuard {
     function borrowUSDC(uint256 amount) external nonReentrant {
         // 1. Check Protocol State
         AegisCore.RiskState state = aegisCore.currentState();
-        require(state == AegisCore.RiskState.GREEN, "Protocol in Risk Mode: Borrowing Paused");
+        require(state != AegisCore.RiskState.RED, "Protocol in Risk Mode: Borrowing Paused");
 
         // 2. Accounting
         userDebtUSDC[msg.sender] += amount;
@@ -257,5 +257,36 @@ contract AegisPool is ReentrancyGuard {
         // Seize 110% of value? Or just value?
         // Let's settle for simple swap logic.
         // Backstop logic handles calculations.
+    }
+    function rescuePosition(address user) external nonReentrant returns (uint256 debtPaid, uint256 collateralSeized) {
+        require(msg.sender == address(aegisCore.backstopPool()), "Only Backstop");
+        
+        uint256 debt = userDebtUSDC[user];
+        require(debt > 0, "No debt");
+        
+        // 1. Receive Payment from Backstop
+        require(usdcToken.transferFrom(msg.sender, address(this), debt), "USDC transfer failed");
+        
+        userDebtUSDC[user] = 0;
+        debtPaid = debt;
+        
+        // 2. Calculate Collateral to Seize (Value + 10%)
+        uint256 price = oracle.getLatestPrice(address(0)); 
+        // Value of Debt in ETH = (Debt(18) * 1e18) / Price(18) = ETH(18)
+        // Ensure precision
+        uint256 ethValue = (debt * 1e18) / price;
+        collateralSeized = (ethValue * 110) / 100;
+        
+        if (collateralSeized > userCollateralETH[user]) {
+            collateralSeized = userCollateralETH[user];
+        }
+        
+        userCollateralETH[user] -= collateralSeized;
+        
+        // 3. Send ETH to Backstop
+        (bool sent, ) = msg.sender.call{value: collateralSeized}("");
+        require(sent, "ETH transfer failed");
+        
+        emit Liquidated(user, msg.sender, debt, collateralSeized);
     }
 }
