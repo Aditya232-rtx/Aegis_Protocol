@@ -24,24 +24,26 @@ Aegis introduces a **Probationary Liquidation** mechanism:
 
 ---
 
-## 🌟 Key Features (USPs)
+## 🌟 Why Aegis? (USPs)
 
-### 1. 🧼 Liquidity Sponge (The "Backstop")
-A dedicated liquidity pool funded by LPs that "soaks up" bad debt. It acts as the buyer of last resort, preventing toxic assets from hitting the open market and causing slippage.
+### 1. 🛡️ Liquidity Sponge (The "Backstop")
+*   **The Problem**: Traditional protocols dump collateral instantly, crashing the price.
+*   **The Solution**: Aegis **absorbs** the debt. The Backstop Pool buys the bad debt and holds the collateral ("Diamond Hands") until the market recovers.
+*   **Effect**: Zero slippage, no price cascades, and saved user funds.
 
-### 2. 🧠 Decentralized ZKML (Zero-Knowledge Machine Learning)
-We don't just trust a centralized bot. The AI model's inferences (Risk Scores) are cryptographically proved.
-*   **Sentinel**: Python/JS agent generates a risk score.
-*   **Verifier**: A smart contract guarantees that the score came from the specific, approved ML model without revealing the model weights.
+### 2. 🧠 Trustless AI Sentinel
+*   **The Problem**: AI is powerful but centralized (black box).
+*   **The Solution**: We verify AI inferences on-chain using **ZKML**.
+*   **Effect**: You don't trust the bot; you trust the Zero-Knowledge Proof.
 
-### 3. 🌉 Cross-Chain Security via Ergo (Rosen Bridge)
-We leverage the **Ergo Blockchain** for decentralized logic enforcement.
-*   **Guard Scripts (ErgoScript)**: The heavy lifting of ZK verification is decentralized.
-*   **Rosen Bridge**: Transmits the verified "Risk State" (Green/Red) from Ergo to Ethereum (EVM) trustlessly.
+### 3. 🧩 Cross-Chain Architecture
+*   **The Problem**: Ethereum gas is too expensive for complex ZK verification.
+*   **The Solution**: We offload heavy computation to **Ergo** (eUTXO) and bridge state back to EVM.
+*   **Effect**: Cheap, scalable, and decentralized security.
 
 ---
 
-## 🏗️ Project Structure
+## 🏗️ Project Architecture
 
 ```bash
 Aegis_Protocol/
@@ -65,6 +67,14 @@ Aegis_Protocol/
 
 ---
 
+## ⚡ Why ErgoScript?
+
+We chose **Ergo** as our security layer for three critical reasons:
+
+1.  **eUTXO Model**: Unlike Ethereum's Account model, Ergo's Extended UTXO model allows for **parallel transaction processing** and deterministic box guarding. This makes it perfect for handling high-throughput risk assessments without state contention.
+2.  **Sigma Protocols**: Ergo has built-in support for **Zero-Knowledge Proofs (Sigma Protocols)** at the protocol level. Writing "Guard Scripts" that verify complex cryptographic statements is cheaper and safer than on EVM.
+3.  **NiPoPoWs & Rosen Bridge**: Ergo's unique "Non-Interactive Proofs of Proof-of-Work" allow for ultra-lightweight bridges (Rosen) that don't rely on centralized multisigs, ensuring our cross-chain messaging is fully decentralized.
+
 ## 🔐 Decentralizing ZKML with ErgoScript
 
 A critical innovation of Aegis is how we handle **Model Integrity**. We don't want a centralized admin flipping a "Panic Switch."
@@ -86,8 +96,85 @@ This architecture ensures that **not even the developers** can trigger a system-
 
 ## 🚀 Getting Started
 
-1.  **Install Dependencies**: `npm install` (root)
-2.  **Spin Up Chain**: `cd packages/blockchain-evm && npx hardhat node`
-3.  **Deploy**: `npx hardhat run scripts/deploy-and-export.js`
-4.  **Simulate Risk**: `npx hardhat run scripts/chaos-monkey-live.js`
-5.  **Run UI**: `cd packages/frontend-cockpit && npm run dev`
+Follow these steps to set up the Aegis Protocol locally.
+
+### Prerequisites
+- Node.js (v16+)
+- Python (v3.8+) for ML Sentinel
+- Docker (optional, for Ergo node)
+
+### Installation
+
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/Aditya232-rtx/Aegis_Protocol.git
+    cd Aegis_Protocol
+    ```
+
+2.  **Install Dependencies**
+    Running the following command at the root will verify the workspace structure.
+    ```bash
+    npm install
+    ```
+
+3.  **Local Blockchain Setup (EVM)**
+    Spin up a local Hardhat node to simulate the Ethereum network.
+    ```bash
+    cd packages/blockchain-evm
+    npx hardhat node
+    ```
+
+4.  **Deploy Contracts**
+    Deploy the core Aegis contracts (Pool, Sponge, Verifier) to your local node.
+    ```bash
+    # In a new terminal
+    cd packages/blockchain-evm
+    npx hardhat run scripts/deploy-and-export.js --network localhost
+    ```
+
+5.  **Run the UI**
+    Launch the Next.js cockpit to interact with the protocol.
+    ```bash
+    cd packages/frontend-cockpit
+    npm run dev
+    ```
+    Visit `http://localhost:3000` to view the dashboard.
+
+6.  **Simulate Insolvency (Chaos Monkey)**
+    Test the protocol's resilience by simulating market crashes and user insolvency.
+    ```bash
+    npx hardhat run scripts/chaos-monkey-live.js --network localhost
+    ```
+
+---
+
+## 🔮 Future Enhancements & Vision
+
+Aegis aims to become the standard for **DeFi Insurance Layers**.
+
+*   **Multi-Chain Sponge**: Expanding the Backstop Pool to Arbitrum, Optimism, and Base using LayerZero.
+*   **Decentralized Model Training**: Moving from off-chain training to Federated Learning on Akash Network.
+*   **Privacy-First Liquidations**: Using Midnight or Aztec to obscure user positions while maintaining protocol solvency.
+*   **Generalized Risk Oracle**: Offering the "Sentinel" score as a public oracle for other lending protocols (composability).
+
+---
+
+## 🤝 Contribution Guidelines
+
+We welcome contributions to Aegis Protocol!
+
+1.  **Fork** the repository.
+2.  **Create a Branch**: `git checkout -b feature/amazing-feature`.
+3.  **Commit**: `git commit -m 'Add some amazing feature'`.
+4.  **Push**: `git push origin feature/amazing-feature`.
+5.  **Open a Pull Request**.
+
+Please ensure all tests pass before submitting.
+
+---
+
+## 👥 The Team
+
+*   **Anmol Kadam** - [GitHub](https://github.com/NMOLE08)
+*   **Aditya Jadhav** - [GitHub](https://github.com/Aditya232-rtx)
+*   **Atharva Gadi** - [GitHub](https://github.com/Atharva-Gadi)
