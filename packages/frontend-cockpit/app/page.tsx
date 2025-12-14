@@ -45,7 +45,7 @@ export default function LandingPage() {
         </p>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
+        <div className="flex flex-col items-center justify-center gap-4 pt-8">
           <Button
             size="lg"
             onClick={handleConnect}
@@ -57,23 +57,16 @@ export default function LandingPage() {
             ) : (
               <ShieldCheck className="mr-2 h-5 w-5" />
             )}
-            {isLoading ? "Connecting..." : "Connect with Unstoppable Domains"}
+            {isLoading ? "Connecting..." : "Connect Wallet to Continue"}
           </Button>
 
-          <Link href="/dashboard">
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-14 px-8 text-lg font-medium border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white transition-all duration-300"
-            >
-              <ArrowRight className="mr-2 h-5 w-5" />
-              View Demo Dashboard
-            </Button>
-          </Link>
+          <p className="text-sm text-slate-400 pt-2">
+            🔒 Wallet connection required to access the dashboard
+          </p>
         </div>
 
         <p className="text-xs text-slate-500 pt-4 opacity-60">
-          No wallet required for demo • Full transparency mode
+          Connect your MetaMask wallet to view your position and interact with the protocol
         </p>
       </div>
     </main>

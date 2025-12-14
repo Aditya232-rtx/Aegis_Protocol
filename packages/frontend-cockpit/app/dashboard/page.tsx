@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import NetworkBackground from "@/app/components/NetworkBackground";
 import Header from "@/app/components/aegis/Header";
 import RiskGauge from "@/app/components/aegis/RiskGauge";
@@ -8,72 +9,114 @@ import MarketConditions from "@/app/components/aegis/MarketConditions";
 import CollateralList from "@/app/components/aegis/CollateralList";
 import FooterDock from "@/app/components/aegis/FooterDock";
 import { Wallet, Activity, TrendingUp, Lock } from "lucide-react";
-
 import CountdownTimer from "@/app/components/aegis/CountdownTimer";
 
+// Import blockchain hooks
+import { useUser } from "@/app/context/UserContext";
+import { useAegisState } from "@/app/hooks/useAegisState";
+import { useUserPosition, formatUSD, formatETH, getRiskLevel, formatHealthFactor } from "@/app/hooks/useUserPosition";
+import { useRescueTx } from "@/app/hooks/useRescueTx";
+
 export default function DashboardPage() {
-    const [isDemoMode, setIsDemoMode] = useState(true);
-    const [riskState, setRiskState] = useState<"safe" | "warning" | "danger">("safe");
+    const router = useRouter();
+    const { walletAddress, badge, hasShield, isConnected } = useUser();
+    const { threatLevel, riskScore } = useAegisState();
+    const { position, loading, refresh } = useUserPosition(walletAddress);
+
+    // Connect Rescue Hook
+    const { triggerRescue, state: rescueState } = useRescueTx(walletAddress, refresh);
+
+    const [isDemoMode, setIsDemoMode] = useState(false);
     const [gracePeriodExpired, setGracePeriodExpired] = useState(false);
 
-    // Quick Tier Mock for Demo - In real app, comes from useUser()
-    const userTier = "ANCIENT_ONE";
+    // Allow viewing dashboard with demo data even without wallet
+    // Redirect disabled to show example interface
+    // useEffect(() => {
+    //     if (!isConnected && !walletAddress) {
+    //         console.log("⚠️ No wallet connected, redirecting to landing page...");
+    //         router.push("/");
+    //     }
+    // }, [isConnected, walletAddress, router]);
 
-    // Toggle Sequence: Safe -> Warning -> Danger -> Safe
-    const toggleRisk = () => {
-        setRiskState(prev => {
-            if (prev === "safe") return "warning";
-            if (prev === "warning") return "danger";
-            return "safe";
-        });
-        // Reset grace period on toggle
-        setGracePeriodExpired(false);
-    };
+    // Show demo data if wallet not connected
+    // (Users can still connect wallet to see their real data)
 
-    // Data mocks based on State
-    const data = {
-        safe: {
-            collateral: "$1,247,832",
-            debt: "$312,458",
-            health: "3.99",
-            healthColor: "text-emerald-400",
-            borrowable: "$523,891",
-            borrowSubtitle: "At current rates",
-            riskScore: 23
-        },
-        warning: { // Elevated Risk
-            collateral: "$847,291",
-            debt: "$612,458",
-            health: "1.38",
-            healthColor: "text-amber-500", // Warning Amber
-            borrowable: "Paused",
-            borrowSubtitle: "Borrowing disabled during elevated risk",
-            riskScore: 67
-        },
-        danger: {
-            collateral: "$312,104",
-            debt: "$298,459",
-            health: "1.04",
-            healthColor: "text-red-500",
-            borrowable: "$0",
-            borrowSubtitle: "Borrowing disabled",
-            riskScore: 94
+    // Map ThreatLevel to risk state for UI
+    const riskState = React.useMemo(() => {
+        switch (threatLevel) {
+            case 'RED': return 'danger';
+            case 'YELLOW': return 'warning';
+            default: return 'safe';
         }
-    };
+    }, [threatLevel]);
 
-    const currentData = data[riskState];
     const isCritical = riskState === "danger";
     const isWarning = riskState === "warning";
 
+    // Use real data from blockchain or show empty state
+    const displayData = loading ? {
+        collateral: "Loading...",
+        debt: "Loading...",
+        health: "...",
+        healthColor: "text-slate-500",
+        borrowable: "Loading...",
+        borrowSubtitle: "Fetching data...",
+        riskScore: Math.round(riskScore * 100),
+        liquidationPrice: "...",
+    } : position ? {
+        collateral: formatUSD(position.totalCollateralUSD),
+        debt: formatUSD(position.totalDebtUSD),
+        health: formatHealthFactor(position.healthFactor),
+        healthColor: getRiskLevel(position.healthFactor) === 'safe'
+            ? "text-emerald-400"
+            : getRiskLevel(position.healthFactor) === 'warning'
+                ? "text-amber-500"
+                : "text-red-500",
+        borrowable: formatUSD(position.availableBorrowsUSD),
+        borrowSubtitle: isCritical
+            ? "Borrowing disabled"
+            : isWarning
+                ? "Borrowing disabled during elevated risk"
+                : "At current rates",
+        riskScore: Math.round(riskScore * 100),
+        liquidationPrice: formatUSD(position.liquidationPrice),
+    } : {
+        // Empty state when wallet not connected
+        collateral: "$0.00",
+        debt: "$0.00",
+        health: "---",
+        healthColor: "text-slate-500",
+        borrowable: "$0.00",
+        borrowSubtitle: "Connect wallet to view",
+        riskScore: Math.round(riskScore * 100),
+        liquidationPrice: "$0.00",
+    };
+
+    // Refresh data periodically
+    useEffect(() => {
+        if (!walletAddress) return;
+
+        const interval = setInterval(() => {
+            refresh();
+        }, 10000); // Refresh every 10 seconds
+
+        return () => clearInterval(interval);
+    }, [walletAddress, refresh]);
+
+    // Map badge to tier for CountdownTimer
+    const userTier = badge === "ANCIENT_ONE" ? "ANCIENT_ONE" :
+        badge === "WHALE" ? "WHALE" :
+            "NEWBIE";
+
     return (
         <main className={`min-h-screen ${isCritical ? "bg-[#1a0505]" : "bg-[#020817]"} text-white relative overflow-x-hidden selection:bg-red-500/30 font-sans transition-colors duration-1000`}>
-            {/* Background handles its own redness if needed, or we use CSS filters */}
+            {/* Background overlay for critical state */}
             <div className={`fixed inset-0 pointer-events-none transition-opacity duration-1000 ${isCritical ? "opacity-20 bg-red-900/20 mix-blend-overlay" : "opacity-0"}`} />
             <NetworkBackground />
 
             <Header
                 isDemoMode={isDemoMode}
-                onToggleDemo={toggleRisk}
+                onToggleDemo={() => setIsDemoMode(!isDemoMode)}
                 variant={riskState}
             />
 
@@ -81,7 +124,7 @@ export default function DashboardPage() {
             <div className="max-w-7xl mx-auto p-6 relative z-10 space-y-6 pb-24">
 
                 {/* Hero: Countdown Timer (Warning Mode Only) */}
-                {isWarning && (
+                {isWarning && hasShield && (
                     <div className="flex justify-center">
                         <CountdownTimer
                             userTier={userTier}
@@ -95,7 +138,7 @@ export default function DashboardPage() {
 
                     {/* Left Column: The Watchtower (Risk Gauge) */}
                     <div className="lg:col-span-1 h-full min-h-[350px]">
-                        <RiskGauge score={currentData.riskScore} variant={riskState} />
+                        <RiskGauge score={displayData.riskScore} variant={riskState} />
                     </div>
 
                     {/* Right Column: Asset Grid (3 Columns) */}
@@ -104,15 +147,15 @@ export default function DashboardPage() {
                         <AssetCard
                             icon={Wallet}
                             label="Total Collateral"
-                            value={currentData.collateral}
-                            subtitle="Across 4 assets"
+                            value={displayData.collateral}
+                            subtitle={position ? `${formatETH(position.collateralETH)}` : "No deposits"}
                             iconColor={isCritical ? "text-red-400" : isWarning ? "text-amber-500" : "text-emerald-400"}
                         />
                         {/* Row 1, Card 2 */}
                         <AssetCard
                             icon={Activity}
                             label="Current Debt"
-                            value={currentData.debt}
+                            value={displayData.debt}
                             subtitle="USDC borrowed"
                             iconColor={isCritical ? "text-red-400" : isWarning ? "text-amber-500" : "text-cyan-400"}
                         />
@@ -120,26 +163,26 @@ export default function DashboardPage() {
                         <AssetCard
                             icon={TrendingUp}
                             label="Health Factor"
-                            value={currentData.health}
+                            value={displayData.health}
                             subtitle={isCritical ? "Liquidation Imminent" : isWarning ? "Approaching Liquidation" : "Safe Zone > 1.5"}
                             trend={isCritical ? "-0.31" : isWarning ? "-0.24" : "+0.12"}
                             trendPositive={!isCritical && !isWarning}
-                            iconColor={currentData.healthColor}
+                            iconColor={displayData.healthColor}
                         />
 
                         {/* Row 2, Card 1 */}
                         <AssetCard
                             icon={isCritical || isWarning ? Lock : TrendingUp}
                             label="Available to Borrow"
-                            value={currentData.borrowable}
-                            subtitle={currentData.borrowSubtitle}
+                            value={displayData.borrowable}
+                            subtitle={displayData.borrowSubtitle}
                             iconColor={isCritical ? "text-slate-500" : isWarning ? "text-amber-500" : "text-emerald-400"}
                         />
                         {/* Row 2, Card 2 */}
                         <AssetCard
                             icon={Lock}
                             label="Liquidation Price"
-                            value="$2,847.00"
+                            value={displayData.liquidationPrice}
                             subtitle="ETH/USD threshold"
                             iconColor={isCritical ? "text-red-400" : isWarning ? "text-amber-500" : "text-indigo-400"}
                         />
@@ -159,6 +202,8 @@ export default function DashboardPage() {
                 isWarning={isWarning}
                 gracePeriodExpired={gracePeriodExpired}
                 userTier={userTier}
+                onTransactionSuccess={refresh}
+                onRescue={triggerRescue}
             />
         </main>
     );

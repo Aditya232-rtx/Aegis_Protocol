@@ -1,20 +1,97 @@
 "use client";
 import React from "react";
+import { useUser } from "@/app/context/UserContext";
+import { useContracts } from "@/app/hooks/useContracts";
+import { usePriceOracle } from "@/app/hooks/usePriceOracle";
+import { ethers } from "ethers";
 
 interface CollateralListProps {
     isCritical?: boolean;
     isWarning?: boolean;
 }
 
-export default function CollateralList({ isCritical = false, isWarning = false }: CollateralListProps) {
-    const assets = [
-        { symbol: "ETH", name: "Ethereum", value: "$462,947", balance: "142.5", percent: 75 },
-        { symbol: "wBTC", name: "Wrapped BTC", value: "$344,828", balance: "8.2", percent: 55 },
-        { symbol: "stETH", name: "Lido Staked ETH", value: "$318,346", balance: "98.8", percent: 50 },
-        { symbol: "LINK", name: "Chainlink", value: "$121,719", balance: "8,450", percent: 20 },
-    ];
+interface CollateralAsset {
+    symbol: string;
+    name: string;
+    value: string;
+    balance: string;
+    percent: number;
+}
 
-    // INTEGRATION POINT (Member C): Iterate through user's deposited assets via Web3 provider.
+export default function CollateralList({ isCritical = false, isWarning = false }: CollateralListProps) {
+    const { walletAddress } = useUser();
+    const contracts = useContracts(walletAddress);
+    const { ethPrice } = usePriceOracle();
+    const [assets, setAssets] = React.useState<CollateralAsset[]>([]);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        async function fetchCollateral() {
+            // If no wallet, show nothing
+            if (!contracts || !walletAddress) {
+                setAssets([]);
+                setLoading(false);
+                return;
+            }
+
+            try {
+                // Get user's ETH collateral
+                const collateralETH = await contracts.aegisPool.userCollateralETH(walletAddress);
+
+                if (collateralETH === BigInt(0)) {
+                    setAssets([]);
+                    setLoading(false);
+                    return;
+                }
+
+                // Use dynamic price from ML oracle
+                const collateralUSD = Number(ethers.formatEther(collateralETH)) * ethPrice;
+
+                const ethAsset: CollateralAsset = {
+                    symbol: "ETH",
+                    name: "Ethereum",
+                    value: `$${collateralUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    balance: `${ethers.formatEther(collateralETH)} ETH`,
+                    percent: 100, // 100% since we only have ETH
+                };
+
+                setAssets([ethAsset]);
+                setLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch collateral:", error);
+                setAssets([]);
+                setLoading(false);
+            }
+        }
+
+        fetchCollateral();
+
+        // Refresh every 10 seconds
+        const interval = setInterval(fetchCollateral, 10000);
+        return () => clearInterval(interval);
+    }, [contracts, walletAddress]);
+
+    if (loading) {
+        return (
+            <div className={`p-6 bg-slate-900/50 backdrop-blur-md border ${isCritical ? "border-red-900/30" : isWarning ? "border-amber-500/30" : "border-slate-800"} rounded-2xl h-full`}>
+                <h3 className={`text-xs font-bold ${isCritical ? "text-red-500" : isWarning ? "text-amber-500" : "text-slate-500"} uppercase tracking-widest mb-6`}>
+                    Collateral Breakdown
+                </h3>
+                <div className="text-slate-500 text-sm">Loading...</div>
+            </div>
+        );
+    }
+
+    if (assets.length === 0) {
+        return (
+            <div className={`p-6 bg-slate-900/50 backdrop-blur-md border ${isCritical ? "border-red-900/30" : isWarning ? "border-amber-500/30" : "border-slate-800"} rounded-2xl h-full`}>
+                <h3 className={`text-xs font-bold ${isCritical ? "text-red-500" : isWarning ? "text-amber-500" : "text-slate-500"} uppercase tracking-widest mb-6`}>
+                    Collateral Breakdown
+                </h3>
+                <div className="text-slate-500 text-sm">No collateral deposited</div>
+            </div>
+        );
+    }
 
     return (
         <div className={`p-6 bg-slate-900/50 backdrop-blur-md border ${isCritical ? "border-red-900/30 shadow-[0_0_20px_rgba(220,38,38,0.1)]" : isWarning ? "border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.1)]" : "border-slate-800"} rounded-2xl h-full transition-all duration-500`}>

@@ -1,30 +1,36 @@
-// app/hooks/useAegisState.ts
-import { useState } from 'react';
+// Hook to fetch Aegis Protocol risk state from ML sentinel
+"use client";
+import { useState, useCallback } from 'react';
+import { useRiskMonitor } from './useRiskMonitor';
+import { useUser } from '../context/UserContext';
 
-// Define the 3 system states based on your Figma designs
 export type ThreatLevel = 'GREEN' | 'YELLOW' | 'RED';
 
-export const useAegisState = () => {
-  // Default to GREEN (Nominal) for now
-  const [threatLevel, setThreatLevel] = useState<ThreatLevel>('GREEN');
+export interface UseAegisStateResult {
+  threatLevel: ThreatLevel;
+  riskScore: number;
+  loading: boolean;
+  error: string | null;
+  refresh: () => void;
+}
 
-  // This is the data Gadi (Member B) will eventually feed us
-  // For now, it's just a mock number
-  const [riskScore, setRiskScore] = useState<number>(0.23); // 0.23 = 23% (Green)
+export function useAegisState(): UseAegisStateResult {
+  const { walletAddress } = useUser();
+  const riskMonitor = useRiskMonitor(walletAddress);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Helper to manually force state (for your Demo/Debug panel)
-  const setManualThreatLevel = (level: ThreatLevel) => {
-    setThreatLevel(level);
-
-    // Auto-update risk score to match visual state for realism
-    if (level === 'GREEN') setRiskScore(0.23);
-    if (level === 'YELLOW') setRiskScore(0.67);
-    if (level === 'RED') setRiskScore(0.94);
-  };
+  const refresh = useCallback(() => {
+    // Refresh is handled by useSentinel polling
+    setLoading(true);
+    setTimeout(() => setLoading(false), 500);
+  }, []);
 
   return {
-    threatLevel,
-    riskScore,
-    setManualThreatLevel, // <--- Use this in your debug buttons
+    threatLevel: riskMonitor.threatLevel,
+    riskScore: riskMonitor.systemRisk,
+    loading,
+    error,
+    refresh
   };
-};
+}

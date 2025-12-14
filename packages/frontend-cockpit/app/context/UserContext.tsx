@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ethers } from "ethers";
-import { UserBadge } from "@/utils/mockReputation";
+import { useUnstoppable, UserBadge } from "@/app/hooks/useUnstoppable";
 
 // Add global declaration for Window
 declare global {
@@ -11,12 +11,6 @@ declare global {
     }
 }
 
-// !!! ---------------------------------------------------------------- !!!
-// DEVELOPER: REPLACE THIS ADDRESS WITH YOUR OWN METAMASK WALLET ADDRESS
-// TO TEST THE "ANCIENT ONE" / "SATOSHI.CRYPTO" UNSTOPPABLE DOMAINS DEMO.
-const DEMO_WALLET_ADDRESS = "0x550270e895f30c26dc63703a03c29294c6688099";
-// !!! ---------------------------------------------------------------- !!!
-
 interface UserContextType {
     walletAddress: string | null;
     badge: UserBadge;
@@ -24,6 +18,7 @@ interface UserContextType {
     hasShield: boolean;
     isConnected: boolean;
     connectWallet: () => Promise<void>;
+    disconnectWallet: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -31,18 +26,16 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
-    const [badge, setBadge] = useState<UserBadge>("NEWBIE");
-    const [domainName, setDomainName] = useState<string | null>("Guest");
-    const [hasShield, setHasShield] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
 
+    // Fetch real identity data from blockchain
+    const { badge, domainName, hasShield } = useUnstoppable(walletAddress);
+
     /**
-     * CONNECT WALLET FLOW
-     * The "Wizard of Oz" Moment:
-     * 1. Connects to Metamask.
-     * 2. Checks if the connected address matches our DEMO_WALLET.
-     * 3. If YES: Simulates a successful Unstoppable Domains resolution -> "satoshi.crypto" / ANCIENT_ONE.
-     * 4. If NO: Treats as a standard guest -> "Guest" / NEWBIE.
+     * CONNECT WALLET FLOW (Enhanced with Blockchain Integration)
+     * 1. Connects to MetaMask
+     * 2. Fetches real badge and identity data from IdentityRegistry contract
+     * 3. Redirects to dashboard
      */
     const connectWallet = async () => {
         console.log("🖱️ connectWallet triggered");
@@ -62,13 +55,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             console.log("🔌 Initializing Ethers Provider with window.ethereum...");
 
             // 1. Initialize Ethers Provider
-            // Note: In Ethers v6, BrowserProvider is designed for this
             const provider = new ethers.BrowserProvider(window.ethereum);
 
             console.log("👋 Requesting accounts (opening popup)...");
 
             // 2. Request Access
-            // We use 'eth_requestAccounts' which should trigger the popup
             const accounts = await provider.send("eth_requestAccounts", []);
 
             console.log("✅ Accounts received:", accounts);
@@ -82,25 +73,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             setWalletAddress(connectedAddress);
             setIsConnected(true);
 
-            // 3. The "Unstoppable Domains" Simulation
-            // We check against the hardcoded demo address to simulate identity resolution.
-            console.log("🧐 Current Connected Address:", connectedAddress);
-            console.log("🎯 Configured Demo Address:", DEMO_WALLET_ADDRESS);
+            console.log("🔗 Connected to:", connectedAddress);
+            console.log("📡 Fetching identity data from blockchain...");
 
-            if (connectedAddress.toLowerCase() === DEMO_WALLET_ADDRESS.toLowerCase()) {
-                console.log("✅ Unstoppable Domains Resolution: Verified 'satoshi.crypto'");
-                setBadge("ANCIENT_ONE");
-                setDomainName("satoshi.crypto");
-                setHasShield(true); // Ancient Ones get the Shield
-            } else {
-                console.log("ℹ️ Basic Wallet Connected: Standard Guest Profile");
-                console.log(`💡 TIP: To see the 'Satoshi' demo, copy '${connectedAddress}' and paste it as the DEMO_WALLET_ADDRESS in 'app/context/UserContext.tsx'`);
-                setBadge("NEWBIE");
-                setDomainName("Guest");
-                setHasShield(false);
-            }
+            // Identity data will be fetched automatically by useUnstoppable hook
 
-            // 4. Redirect to Dashboard
+            // 3. Redirect to Dashboard
             router.push("/dashboard");
 
         } catch (error: any) {
@@ -114,8 +92,70 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const disconnectWallet = () => {
+        setWalletAddress(null);
+        setIsConnected(false);
+        router.push("/");
+    };
+
+    // Check for existing connection on mount
+    useEffect(() => {
+        const checkConnection = async () => {
+            if (typeof window === "undefined" || !window.ethereum) return;
+
+            try {
+                const accounts = await window.ethereum.request({ method: "eth_accounts" });
+                if (accounts.length > 0) {
+                    console.log("🔄 Restoring connection to:", accounts[0]);
+                    setWalletAddress(accounts[0]);
+                    setIsConnected(true);
+                }
+            } catch (error) {
+                console.error("Failed to check existing connection:", error);
+            }
+        };
+
+        checkConnection();
+    }, []);
+
+    // Listen for account changes
+    useEffect(() => {
+        if (typeof window === "undefined" || !window.ethereum) return;
+
+        const handleAccountsChanged = (accounts: string[]) => {
+            if (accounts.length === 0) {
+                disconnectWallet();
+            } else if (accounts[0] !== walletAddress) {
+                setWalletAddress(accounts[0]);
+                setIsConnected(true);
+            }
+        };
+
+        const handleChainChanged = () => {
+            window.location.reload();
+        };
+
+        window.ethereum.on("accountsChanged", handleAccountsChanged);
+        window.ethereum.on("chainChanged", handleChainChanged);
+
+        return () => {
+            window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+            window.ethereum.removeListener("chainChanged", handleChainChanged);
+        };
+    }, [walletAddress]);
+
     return (
-        <UserContext.Provider value={{ walletAddress, badge, domainName, hasShield, isConnected, connectWallet }}>
+        <UserContext.Provider
+            value={{
+                walletAddress,
+                badge,
+                domainName,
+                hasShield,
+                isConnected,
+                connectWallet,
+                disconnectWallet
+            }}
+        >
             {children}
         </UserContext.Provider>
     );

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Integration Frontend Test</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            border: 1px solid #00ff00;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .test-section h2 {
+            color: #00ffff;
+            margin-top: 0;
+        }
+        .pass { color: #00ff00; }
+        .fail { color: #ff0000; }
+        .info { color: #ffff00; }
+        pre {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 ML Integration Frontend Test Console</h1>
+    
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="testSentinelHook()">Test useSentinel Hook</button>
+        <button onclick="testPriceOracle()">Test Price Oracle</button>
+        <button onclick="testRiskMonitor()">Test Risk Monitor</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        let testResults = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'pass' ? 'pass' : type === 'fail' ? 'fail' : 'info';
+            testResults.push(`<div class="${className}">[${timestamp}] ${message}</div>`);
+            updateResults();
+        }
+        
+        function updateResults() {
+            document.getElementById('results').innerHTML = testResults.join('');
+        }
+        
+        function clearResults() {
+            testResults = [];
+            updateResults();
+        }
+        
+        async function testSentinelHook() {
+            log('=== Testing useSentinel Hook ===', 'info');
+            
+            try {
+                // Test 1: Fetch live_feed.json
+                log('Test 1.1: Fetching live_feed.json...', 'info');
+                const response = await fetch('/live_feed.json');
+                
+                if (!response.ok) {
+                    log(`FAIL: HTTP ${response.status} - ${response.statusText}`, 'fail');
+                    return;
+                }
+                
+                log('PASS: live_feed.json fetched successfully', 'pass');
+                
+                // Test 2: Parse JSON
+                log('Test 1.2: Parsing JSON data...', 'info');
+                const data = await response.json();
+                log('PASS: JSON parsed successfully', 'pass');
+                
+                // Test 3: Validate structure
+                log('Test 1.3: Validating data structure...', 'info');
+                const requiredFields = ['riskScore', 'ethPrice', 'liquidityHealth', 'status', 'timestamp'];
+                const missingFields = requiredFields.filter(field => !(field in data));
+                
+                if (missingFields.length > 0) {
+                    log(`FAIL: Missing fields: ${missingFields.join(', ')}`, 'fail');
+                } else {
+                    log('PASS: All required fields present', 'pass');
+                }
+                
+                // Test 4: Display current data
+                log('Current ML Sentinel Data:', 'info');
+                log(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                
+                // Test 5: Validate ranges
+                log('Test 1.4: Validating data ranges...', 'info');
+                
+                if (data.riskScore >= 0 && data.riskScore <= 1) {
+                    log(`PASS: Risk score ${data.riskScore} is in valid range [0, 1]`, 'pass');
+                } else {
+                    log(`FAIL: Risk score ${data.riskScore} is out of range`, 'fail');
+                }
+                
+                if (data.ethPrice > 1000 && data.ethPrice < 5000) {
+                    log(`PASS: ETH price $${data.ethPrice} is reasonable`, 'pass');
+                } else {
+                    log(`FAIL: ETH price $${data.ethPrice} seems incorrect`, 'fail');
+                }
+                
+                if (data.liquidityHealth >= 0 && data.liquidityHealth <= 1) {
+                    log(`PASS: Liquidity health ${data.liquidityHealth} is valid`, 'pass');
+                } else {
+                    log(`FAIL: Liquidity health ${data.liquidityHealth} is invalid`, 'fail');
+                }
+                
+            } catch (error) {
+                log(`FAIL: ${error.message}`, 'fail');
+            }
+        }
+        
+        async function testPriceOracle() {
+            log('=== Testing Price Oracle ===', 'info');
+            
+            try {
+                const response = await fetch('/live_feed.json');
+                const data = await response.json();
+                
+                log('Test 2.1: Calculating dynamic price...', 'info');
+                
+                const basePrice = 2500;
+                const riskImpact = data.riskScore * 0.4;
+                const adjustedPrice = Math.round(basePrice * (1 - riskImpact));
+                
+                log(`Base Price: $${basePrice}`, 'info');
+                log(`Risk Score: ${(data.riskScore * 100).toFixed(2)}%`, 'info');
+                log(`Risk Impact: ${(riskImpact * 100).toFixed(2)}%`, 'info');
+                log(`Adjusted Price: $${adjustedPrice}`, 'info');
+                
+                const priceDrop = basePrice - adjustedPrice;
+                const dropPercent = (priceDrop / basePrice * 100).toFixed(2);
+                
+                log(`Price Drop: $${priceDrop} (${dropPercent}%)`, 'info');
+                
+                // Validate price logic
+                if (adjustedPrice <= basePrice) {
+                    log('PASS: Adjusted price is not higher than base price', 'pass');
+                } else {
+                    log('FAIL: Adjusted price should not exceed base price', 'fail');
+                }
+                
+                if (adjustedPrice >= basePrice * 0.6) {
+                    log('PASS: Price drop is within expected range (max 40%)', 'pass');
+                } else {
+                    log('FAIL: Price drop exceeds 40%', 'fail');
+                }
+                
+            } catch (error) {
+                log(`FAIL: ${error.message}`, 'fail');
+            }
+        }
+        
+        async function testRiskMonitor() {
+            log('=== Testing Risk Monitor ===', 'info');
+            
+            try {
+                const response = await fetch('/live_feed.json');
+                const data = await response.json();
+                
+                log('Test 3.1: Determining threat level...', 'info');
+                
+                const riskScore = data.riskScore;
+                let threatLevel;
+                
+                if (riskScore >= 0.8) {
+                    threatLevel = 'RED';
+                } else if (riskScore >= 0.5) {
+                    threatLevel = 'YELLOW';
+                } else {
+                    threatLevel = 'GREEN';
+                }
+                
+                log(`Risk Score: ${(riskScore * 100).toFixed(2)}%`, 'info');
+                log(`Threat Level: ${threatLevel}`, threatLevel === 'GREEN' ? 'pass' : threatLevel === 'YELLOW' ? 'info' : 'fail');
+                
+                // Test state logic
+                log('Test 3.2: Validating state transition logic...', 'info');
+                
+                const testCases = [
+                    { risk: 0.2, expected: 'GREEN' },
+                    { risk: 0.5, expected: 'YELLOW' },
+                    { risk: 0.65, expected: 'YELLOW' },
+                    { risk: 0.8, expected: 'RED' },
+                    { risk: 0.95, expected: 'RED' },
+                ];
+                
+                let passed = 0;
+                let failed = 0;
+                
+                testCases.forEach(test => {
+                    let level;
+                    if (test.risk >= 0.8) level = 'RED';
+                    else if (test.risk >= 0.5) level = 'YELLOW';
+                    else level = 'GREEN';
+                    
+                    if (level === test.expected) {
+                        log(`PASS: Risk ${(test.risk * 100).toFixed(0)}% → ${level}`, 'pass');
+                        passed++;
+                    } else {
+                        log(`FAIL: Risk ${(test.risk * 100).toFixed(0)}% → ${level} (expected ${test.expected})`, 'fail');
+                        failed++;
+                    }
+                });
+                
+                log(`State Logic Tests: ${passed} passed, ${failed} failed`, failed === 0 ? 'pass' : 'fail');
+                
+            } catch (error) {
+                log(`FAIL: ${error.message}`, 'fail');
+            }
+        }
+        
+        async function runAllTests() {
+            clearResults();
+            log('🚀 Starting comprehensive ML integration tests...', 'info');
+            log('', 'info');
+            
+            await testSentinelHook();
+            log('', 'info');
+            
+            await testPriceOracle();
+            log('', 'info');
+            
+            await testRiskMonitor();
+            log('', 'info');
+            
+            log('✅ All tests complete!', 'pass');
+            log('Check the results above for any failures.', 'info');
+        }
+        
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            log('ML Integration Test Console Ready', 'info');
+            log('Click "Run All Tests" to begin testing', 'info');
+        });
+    </script>
+</body>
+</html>

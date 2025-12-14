@@ -1,6 +1,7 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { ArrowDownCircle, ArrowUpCircle, Zap, AlertTriangle, ExternalLink, Lock } from "lucide-react";
+import TransactionModal from "./TransactionModal";
 
 interface FooterDockProps {
     isCritical?: boolean;
@@ -8,6 +9,7 @@ interface FooterDockProps {
     gracePeriodExpired?: boolean;
     userTier?: string;
     onRescue?: () => void;
+    onTransactionSuccess?: () => void;
 }
 
 export default function FooterDock({
@@ -15,8 +17,12 @@ export default function FooterDock({
     isWarning = false,
     gracePeriodExpired = false,
     userTier = "NEWBIE",
-    onRescue
+    onRescue,
+    onTransactionSuccess
 }: FooterDockProps) {
+    const [depositModalOpen, setDepositModalOpen] = useState(false);
+    const [borrowModalOpen, setBorrowModalOpen] = useState(false);
+
     if (isCritical) {
         // ... (Existing Critical Return Logic) ...
         return (
@@ -72,45 +78,78 @@ export default function FooterDock({
         }
 
         return (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-                <div className="flex items-center gap-3 p-1.5 rounded-full bg-slate-900/90 backdrop-blur-xl border border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+            <>
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+                    <div className="flex items-center gap-3 p-1.5 rounded-full bg-slate-900/90 backdrop-blur-xl border border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.1)]">
 
-                    {/* Standard Borrow Button (Unlocked) */}
-                    <button className="flex items-center gap-2 px-6 py-3 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-all group border border-transparent">
-                        <ArrowUpCircle className="h-4 w-4 text-cyan-400 group-hover:text-cyan-300" />
-                        <span className="text-sm font-medium">Borrow</span>
-                    </button>
+                        {/* Standard Borrow Button (Unlocked) */}
+                        <button
+                            onClick={() => setBorrowModalOpen(true)}
+                            className="flex items-center gap-2 px-6 py-3 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-all group border border-transparent"
+                        >
+                            <ArrowUpCircle className="h-4 w-4 text-cyan-400 group-hover:text-cyan-300" />
+                            <span className="text-sm font-medium">Borrow</span>
+                        </button>
 
-                    {/* Conditional Repay Button */}
-                    <button
-                        disabled={repayDisabled}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all ${repayStyle}`}
-                    >
-                        {repayDisabled && <AlertTriangle className="h-4 w-4" />}
-                        <span className="text-sm font-bold uppercase tracking-wide">{repayText}</span>
-                    </button>
+                        {/* Conditional Repay Button */}
+                        <button
+                            disabled={repayDisabled}
+                            className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all ${repayStyle}`}
+                        >
+                            {repayDisabled && <AlertTriangle className="h-4 w-4" />}
+                            <span className="text-sm font-bold uppercase tracking-wide">{repayText}</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
+
+                <TransactionModal
+                    type="borrow"
+                    isOpen={borrowModalOpen}
+                    onClose={() => setBorrowModalOpen(false)}
+                    onSuccess={onTransactionSuccess}
+                />
+            </>
         );
     }
 
     return (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-            <div className="flex items-center gap-1 p-1.5 rounded-full bg-slate-900/80 backdrop-blur-xl border border-slate-700 shadow-2xl shadow-black/50">
+        <>
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+                <div className="flex items-center gap-1 p-1.5 rounded-full bg-slate-900/80 backdrop-blur-xl border border-slate-700 shadow-2xl shadow-black/50">
 
-                <button className="flex items-center gap-2 px-6 py-3 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-all group">
-                    <ArrowDownCircle className="h-4 w-4 text-emerald-400 group-hover:text-emerald-300" />
-                    <span className="text-sm font-medium">Deposit</span>
-                </button>
+                    <button
+                        onClick={() => setDepositModalOpen(true)}
+                        className="flex items-center gap-2 px-6 py-3 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-all group"
+                    >
+                        <ArrowDownCircle className="h-4 w-4 text-emerald-400 group-hover:text-emerald-300" />
+                        <span className="text-sm font-medium">Deposit</span>
+                    </button>
 
-                <div className="w-px h-6 bg-slate-800" />
+                    <div className="w-px h-6 bg-slate-800" />
 
-                <button className="flex items-center gap-2 px-6 py-3 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-all group shadow-none">
-                    <ArrowUpCircle className="h-4 w-4 text-cyan-400 group-hover:text-cyan-300" />
-                    <span className="text-sm font-medium">Borrow</span>
-                </button>
+                    <button
+                        onClick={() => setBorrowModalOpen(true)}
+                        className="flex items-center gap-2 px-6 py-3 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-all group shadow-none"
+                    >
+                        <ArrowUpCircle className="h-4 w-4 text-cyan-400 group-hover:text-cyan-300" />
+                        <span className="text-sm font-medium">Borrow</span>
+                    </button>
 
+                </div>
             </div>
-        </div>
+
+            <TransactionModal
+                type="deposit"
+                isOpen={depositModalOpen}
+                onClose={() => setDepositModalOpen(false)}
+                onSuccess={onTransactionSuccess}
+            />
+            <TransactionModal
+                type="borrow"
+                isOpen={borrowModalOpen}
+                onClose={() => setBorrowModalOpen(false)}
+                onSuccess={onTransactionSuccess}
+            />
+        </>
     );
 }

@@ -1,0 +1,14 @@
+{
+  "riskScore": 0.15,
+  "change24h": -0.15,
+  "liquidityHealth": 0.925,
+  "timestamp": "2025-12-14T04:51:22.570Z",
+  "status": "normal",
+  "ethPrice": 2500,
+  "volatility": 0.045,
+  "marketDepth": {
+    "bidLiquidity": 1387500,
+    "askLiquidity": 1341250,
+    "spread": 0.0035
+  }
+}
