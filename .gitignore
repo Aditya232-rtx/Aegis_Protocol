@@ -42,3 +42,27 @@ typechain-types/
 *.swo
 *~
 .tmp/
+
+.env
+.hardhat.config.cjs
+
+# Test & Verification Scripts (Keep Simulations)
+packages/blockchain-evm/scripts/verify-*.js
+packages/blockchain-evm/scripts/verify-*.cjs
+packages/blockchain-evm/scripts/create-position.cjs
+packages/blockchain-evm/scripts/test-*.js
+packages/blockchain-evm/scripts/temp_*.js
+
+# Agent Artifacts
+*.log
+_temp_*.md
+
+# Unwanted Docs (User Request)
+MAINNET_FORKING.md
+METAMASK_FIX.md
+SETUP_CHECKLIST.md
+WALLET_SETUP.md
+
+# Build
+.next/
+packages/frontend-cockpit/.next/
